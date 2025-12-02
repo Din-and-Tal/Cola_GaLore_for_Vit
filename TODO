@@ -1,0 +1,7 @@
+
+TODO: pytorch reproduce guide (export CUBLAS_WORKSPACE_CONFIG=:4096:8)
+TODO: run two same experience and see that results are same when debug is on
+TODO: remember to change debug mode in release
+TODO: add type checking (via python's type checker and ruff linter)
+TODO: fix the bug in AMP (exploding loss)
+TODO: find better solution to surpress None errors after checking for None (# type: ignore)
