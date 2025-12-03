@@ -4,7 +4,7 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, ConcatDataset, Subset
 
-# TODO: refactor
+# TODO: go over
 
 # Mean and Std for normalization
 STATS = {
@@ -21,12 +21,16 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def get_data_loaders(cfg, debug):
+def get_data_loaders(cfg, debug, fullTrain):
     """
     Returns training, validation and test dataloaders based on config.
     Splits the combined dataset according to TRAIN_RATIO, VAL_RATIO, TEST_RATIO.
+    If fullTrain is False, only a fraction of the data is used.
     """
     print(f"Loading dataset: {cfg.DATASET_NAME}...")
+
+    # Fraction of data to use when fullTrain is False
+    REDUCED_DATA_FRACTION = 0.1
 
     dataset_name = cfg.DATASET_NAME.lower()
     mean, std = STATS.get(dataset_name, STATS["imagefolder"])
@@ -61,24 +65,14 @@ def get_data_loaders(cfg, debug):
             raise ValueError(f"Unknown dataset name: {cfg.DATASET_NAME}")
 
     # 1. Create two versions of the full dataset: one with Augmentation, one Clean
-    if dataset_name in ["cifar10", "cifar100"]:
-        # Load official train and test sets
-        ds_train_aug = load_datasets(train_transform, train_split=True)
-        ds_test_aug = load_datasets(train_transform, train_split=False)
-        full_aug = ConcatDataset([ds_train_aug, ds_test_aug])
+    # Load official train and test sets
+    ds_train_aug = load_datasets(train_transform, train_split=True)
+    ds_test_aug = load_datasets(train_transform, train_split=False)
+    full_aug = ConcatDataset([ds_train_aug, ds_test_aug])
 
-        ds_train_clean = load_datasets(val_transform, train_split=True)
-        ds_test_clean = load_datasets(val_transform, train_split=False)
-        full_clean = ConcatDataset([ds_train_clean, ds_test_clean])
-    else:
-        # ImageFolder
-        ds_train_aug = load_datasets(train_transform, train_split=True)
-        ds_val_aug = load_datasets(train_transform, train_split=False)
-        full_aug = ConcatDataset([ds_train_aug, ds_val_aug])
-
-        ds_train_clean = load_datasets(val_transform, train_split=True)
-        ds_val_clean = load_datasets(val_transform, train_split=False)
-        full_clean = ConcatDataset([ds_train_clean, ds_val_clean])
+    ds_train_clean = load_datasets(val_transform, train_split=True)
+    ds_test_clean = load_datasets(val_transform, train_split=False)
+    full_clean = ConcatDataset([ds_train_clean, ds_test_clean])
 
     # 2. Calculate Split Sizes
     total_size = len(full_aug)
@@ -96,6 +90,19 @@ def get_data_loaders(cfg, debug):
     train_indices = indices[:train_size]
     val_indices = indices[train_size : train_size + val_size]
     test_indices = indices[train_size + val_size :]
+
+    # Reduce data if fullTrain is False
+    if not fullTrain:
+        train_indices = train_indices[
+            : max(1, int(len(train_indices) * REDUCED_DATA_FRACTION))
+        ]
+        val_indices = val_indices[
+            : max(1, int(len(val_indices) * REDUCED_DATA_FRACTION))
+        ]
+        test_indices = test_indices[
+            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
+        ]
+        print(f"Using reduced data: {REDUCED_DATA_FRACTION*100:.0f}% of full dataset")
 
     # 4. Create Subsets
     # Train gets Augmented dataset, Val/Test get Clean dataset

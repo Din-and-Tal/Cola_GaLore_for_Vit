@@ -16,7 +16,7 @@ from util.scheduler import CosineAnnealingWarmupRestarts
 
 class Trainer:
 
-    def __init__(self, cfg, debug=True):
+    def __init__(self, cfg, debug=True,fullTrain=True):
         self.debug = debug
         self.cfg = cfg
         self.wandb = None  # optional
@@ -35,7 +35,7 @@ class Trainer:
 
         # 2. Data
         self.loaders.train, self.loaders.val, self.loaders.test = get_data_loaders(
-            cfg, debug
+            cfg, debug,fullTrain
         )
 
         # 3. Model & Measure Memory

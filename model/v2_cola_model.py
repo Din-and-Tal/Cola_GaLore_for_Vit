@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from model.v2_cola_layer import ColaLinear
+# TODO: check if recursive is needed
 
 def convert_vit_to_cola_m(model, rank_ratio=0.25, verbose=False):
     """
@@ -57,28 +58,5 @@ def convert_vit_to_cola_m(model, rank_ratio=0.25, verbose=False):
                 # Recurse deeper
                 replace_linear_with_cola(child, full_name)
 
-    # print(f"Converting ViT to CoLA-M (Rank Ratio: {rank_ratio})...")
     replace_linear_with_cola(model)
     return model
-
-# --- Usage Example ---
-
-# # 1. Load standard ViT
-# model_id = "google/vit-base-patch16-224"
-# vit_model = ViTForImageClassification.from_pretrained(model_id)
-
-# # 2. Check original parameter count
-# original_params = sum(p.numel() for p in vit_model.parameters())
-# print(f"Original Params: {original_params / 1e6:.2f} M")
-
-# # 3. Convert to CoLA-M
-# # The paper recommends rank = 1/4 of dimension
-# cola_vit_model = convert_vit_to_cola_m(vit_model, rank_ratio=0.25)
-
-# # 4. Check new parameter count
-# cola_params = sum(p.numel() for p in cola_vit_model.parameters())
-# print(f"CoLA Params: {cola_params / 1e6:.2f} M")
-
-# # 5. Verify Structure
-# print("\nFirst Encoder Layer Structure:")
-# print(cola_vit_model.vit.encoder.layer[0])

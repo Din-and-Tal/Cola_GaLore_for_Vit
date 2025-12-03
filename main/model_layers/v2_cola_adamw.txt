@@ -1,0 +1,720 @@
+
+==================================================
+Running config: v2_cola_adamw
+==================================================
+Loading dataset: cifar10...
+Batches -> Train: 750, Val: 94, Test: 94
+Using optimizer: adamw
+
+================================================================================
+Model: ViTForImageClassification
+================================================================================
+Total parameters: 32,583,946
+Trainable parameters: 32,583,946
+Non-trainable parameters: 0
+--------------------------------------------------------------------------------
+Layer Hierarchy:
+--------------------------------------------------------------------------------
+├─ vit: ViTModel | no params
+│   ├─ embeddings: ViTEmbeddings | params: 13,824
+│   │   └─ cls_token: [1, 1, 768], requires_grad=True
+│   │   └─ position_embeddings: [1, 17, 768], requires_grad=True
+│   │   ├─ patch_embeddings: ViTPatchEmbeddings | no params
+│   │   │   ├─ projection: Conv2d | params: 590,592
+│   │   │   │   └─ weight: [768, 3, 16, 16], requires_grad=True
+│   │   │   │   └─ bias: [768], requires_grad=True
+│   │   ├─ dropout: Dropout | no params
+│   ├─ encoder: ViTEncoder | no params
+│   │   ├─ layer: ModuleList | no params
+│   │   │   ├─ 0: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 1: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 2: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 3: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 4: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 5: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 6: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 7: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 8: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 9: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 10: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   ├─ 11: ViTLayer | no params
+│   │   │   │   ├─ attention: ViTAttention | no params
+│   │   │   │   │   ├─ attention: ViTSelfAttention | no params
+│   │   │   │   │   │   ├─ query: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ key: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ value: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ output: ViTSelfOutput | no params
+│   │   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ intermediate: ViTIntermediate | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 147,456
+│   │   │   │   │   │   │   └─ cola_a: [768, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 592,896
+│   │   │   │   │   │   │   └─ cola_b: [192, 3072], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [3072], requires_grad=True
+│   │   │   │   │   ├─ intermediate_act_fn: GELUActivation | no params
+│   │   │   │   ├─ output: ViTOutput | no params
+│   │   │   │   │   ├─ dense: ColaLinear | no params
+│   │   │   │   │   │   ├─ down: ColaMDownProjLayer | params: 589,824
+│   │   │   │   │   │   │   └─ cola_a: [3072, 192], requires_grad=True
+│   │   │   │   │   │   │   ├─ lr_act: SiLUActivation | no params
+│   │   │   │   │   │   ├─ up: ColaMUpProjLayer | params: 148,224
+│   │   │   │   │   │   │   └─ cola_b: [192, 768], requires_grad=True
+│   │   │   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   │   ├─ dropout: Dropout | no params
+│   │   │   │   ├─ layernorm_before: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   │   │   │   ├─ layernorm_after: LayerNorm | params: 1,536
+│   │   │   │   │   └─ weight: [768], requires_grad=True
+│   │   │   │   │   └─ bias: [768], requires_grad=True
+│   ├─ layernorm: LayerNorm | params: 1,536
+│   │   └─ weight: [768], requires_grad=True
+│   │   └─ bias: [768], requires_grad=True
+├─ classifier: Linear | params: 7,690
+│   └─ weight: [10, 768], requires_grad=True
+│   └─ bias: [10], requires_grad=True
+================================================================================
+

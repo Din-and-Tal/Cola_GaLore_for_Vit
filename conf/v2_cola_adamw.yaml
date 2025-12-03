@@ -1,4 +1,4 @@
-    MODEL_NAME: 'v1_cola'
+    MODEL_NAME: 'v2_cola'
     OPTIMIZER_NAME: "adamw"  # 'adamw', 'galore8', 'galore8_per_layer'
     MEM_MEASURE: false
     SEED: 42

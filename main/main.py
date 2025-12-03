@@ -6,7 +6,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from Trainer import Trainer
 
-@hydra.main(version_base=None, config_path="../conf", config_name="cola_glora")
+# TODO: iterate over configs with proceses create
+# TODO: override with cmdline cfg parameter and iterate in code
+# TODO: make base cfg
+
+@hydra.main(version_base=None, config_path="../conf", config_name="vit_adamw")
 def main(cfg):
     trainer = Trainer(cfg)
     trainer.train()

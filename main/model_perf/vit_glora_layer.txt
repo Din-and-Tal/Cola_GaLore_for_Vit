@@ -1,0 +1,16 @@
+
+==================================================
+Running config: vit_glora_layer
+==================================================
+Loading dataset: cifar10...
+Using reduced data: 10% of full dataset
+Batches -> Train: 75, Val: 10, Test: 10
+Using optimizer: galore8_per_layer
+Using GaLoreAdamW8bit *per layer*
+
+Starting training...
+Summary Ep 1: Train Loss: 2.0866 | Train Acc: 23.71% | Val Loss: 1.9184 | Val Acc: 26.83% | LR: 2.98e-03
+
+Training complete in 0.53 minutes.
+Best Validation Accuracy: 0.00%
+Test Accuracy: 0.00%

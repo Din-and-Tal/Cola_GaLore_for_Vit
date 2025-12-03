@@ -1,0 +1,16 @@
+
+==================================================
+Running config: v2_cola_glora_layer
+==================================================
+Loading dataset: cifar10...
+Using reduced data: 10% of full dataset
+Batches -> Train: 75, Val: 10, Test: 10
+Using optimizer: galore8_per_layer
+Using GaLoreAdamW8bit *per layer*
+
+Starting training...
+Summary Ep 1: Train Loss: nan | Train Acc: 10.81% | Val Loss: nan | Val Acc: 10.17% | LR: 2.98e-03
+
+Training complete in 0.46 minutes.
+Best Validation Accuracy: 0.00%
+Test Accuracy: 0.00%

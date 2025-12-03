@@ -5,3 +5,4 @@ TODO: remember to change debug mode in release
 TODO: add type checking (via python's type checker and ruff linter)
 TODO: fix the bug in AMP (exploding loss)
 TODO: find better solution to surpress None errors after checking for None (# type: ignore)
+TODO: profile how much time takes each part
