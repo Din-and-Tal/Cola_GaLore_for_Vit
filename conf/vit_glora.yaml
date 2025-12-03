@@ -1,5 +1,5 @@
     MODEL_NAME: 'vit'
-    OPTIMIZER_NAME: "glora"  # 'adamw', 'galore8', 'galore8_per_layer'
+    OPTIMIZER_NAME: "galore8"  # 'adamw', 'galore8', 'galore8_per_layer'
     MEM_MEASURE: false
     SEED: 42
     NUM_WORKERS: 2 # TODO: check best value

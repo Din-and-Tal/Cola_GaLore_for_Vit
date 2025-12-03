@@ -11,7 +11,6 @@ from optimizer.optimizer import get_optimizer
 from util.dataloader import get_data_loaders
 from util.general import set_seed
 from util.model import build_model, load_model, save_model
-from util.profiler import run_and_log_profiler
 from util.scheduler import CosineAnnealingWarmupRestarts
 
 
@@ -102,22 +101,6 @@ class Trainer:
         start_time = time.time()
         for epoch in range(self.cfg.NUM_EPOCHS):
 
-            # ---- RUN PROFILER ON FIRST EPOCH (ONE BATCH) ----
-            if epoch == 0:
-                sample_images, sample_labels = next(iter(self.loaders.train))
-                run_and_log_profiler(
-                    model=self.model,
-                    images=sample_images,
-                    labels=sample_labels,
-                    lossFunc=self.lossFunc,
-                    device=self.device,
-                    tag="train_profiler",
-                    step=epoch + 1,
-                    top_k=12,
-                )
-
-                print("\n🔬 Profiler complete. Continuing normal training...\n")
-
             # Train
             train_loss, train_acc = self._epoch_step(
                 loader=self.loaders.train, is_training=True, epoch=epoch
@@ -192,7 +175,6 @@ class Trainer:
         )
 
         self.model.train() if is_training else self.model.eval()  # type: ignore
-
         for inputs, targets in pbar:
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 

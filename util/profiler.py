@@ -1,95 +1,45 @@
 import torch
 import re
-import torch
 from torch.profiler import profile, ProfilerActivity
 import wandb
-import torch
 
 
-# --- Helper Function to Measure Memory ---
-def measure_memory_and_params(model, input_tensor, model_name="Model"):
-    # 1. Move to GPU
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device.type == "cpu":
-        print("CUDA not available. Cannot measure VRAM savings.")
-        return
 
-    model.to(device)
-    input_tensor = input_tensor.to(device)
-
-    # 2. Reset Memory Stats
-    torch.cuda.empty_cache()
-    torch.cuda.reset_peak_memory_stats()
-
-    # 3. Setup Optimizer (To simulate real training overhead)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
-
-    # 4. Forward + Backward Pass
-    model.train()
-    outputs = model(
-        input_tensor, labels=torch.tensor([0] * input_tensor.shape[0]).to(device)
-    )
-    loss = outputs.loss
-    loss.backward()
-    optimizer.step()
-
-    # 5. Measure
-    peak_mem = torch.cuda.max_memory_allocated() / 1024 / 1024  # Convert to MB
-    param_count = sum(p.numel() for p in model.parameters())
-
-    print(f"--- {model_name} Results ---")
-    print(f"Parameters: {param_count/1e6:.2f} M")
-    print(f"Peak VRAM:  {peak_mem:.2f} MB")
-
-    # Cleanup to avoid interfering with next test
-    del model, optimizer, outputs, loss
-    torch.cuda.empty_cache()
-    return peak_mem
-
-
-# --- Main Configuration ---
-def run_benchmark(cfg, cola_model, vit_model):
-
-    print(
-        f"Benchmarking with Batch Size: {cfg.BATCH_SIZE}, Hidden Size: {cfg.HIDDEN_SIZE}"
-    )
-
-    # Generate Dummy Input
-    # Shape: [Batch, Channels, Height, Width]
-    pixel_values = torch.randn(cfg.BATCH_SIZE, 3, cfg.IMAGE_SIZE, cfg.IMAGE_SIZE)
-
-    # TODO: check vit with vit_config.gradient_checkpointing = True
-
-    vit_mem = measure_memory_and_params(vit_model, pixel_values.clone(), "Standard ViT")
-    cola_mem = measure_memory_and_params(cola_model, pixel_values.clone(), "CoLA ViT")
-
-    # --- Summary ---
-    if vit_mem and cola_mem:
-        savings = (1 - (cola_mem / vit_mem)) * 100
-        print(f"\nTotal VRAM Savings: {savings:.2f}%")
-
-def benchmark_training_memory(model, optimizer, input_data, target):
+def benchmark_training_memory(model, lossFunc, optimizer, input_data, target):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = model.to(device)
+    input_data = input_data.to(device)
+    target = target.to(device)
+
+    # Reset peak stats to track only this specific run
     torch.cuda.reset_peak_memory_stats()
-    
+
     # 1. Forward
-    output = model(input_data).logits
+    output = model(pixel_values=input_data).logits
     mem_forward = torch.cuda.max_memory_allocated()
-    
+    mem_forward_res = torch.cuda.max_memory_reserved()
+
     # 2. Backward
-    loss = torch.nn.functional.cross_entropy(output, target)
+    loss = lossFunc(output, target)
     loss.backward()
     mem_backward = torch.cuda.max_memory_allocated()
-    
+    mem_backward_res = torch.cuda.max_memory_reserved()
+
     # 3. Optimizer Step
     optimizer.step()
     optimizer.zero_grad()
     mem_step = torch.cuda.max_memory_allocated()
-    
-    print(f"Peak Memory (Forward):  {mem_forward / 1024**2:.2f} MB")
-    print(f"Peak Memory (Backward): {mem_backward / 1024**2:.2f} MB")
-    print(f"Peak Memory (Step):     {mem_step / 1024**2:.2f} MB")
+    mem_step_res = torch.cuda.max_memory_reserved()
+
+    print(
+        f"Peak Memory (Forward):  {mem_forward / 1024**2:.2f} MB | with Reserved: {(mem_forward_res+mem_forward) / 1024**2:.2f} MB"
+    )
+    print(
+        f"Peak Memory (Backward): {mem_backward / 1024**2:.2f} MB | with Reserved: {(mem_backward_res+mem_backward) / 1024**2:.2f} MB"
+    )
+    print(
+        f"Peak Memory (Step):     {mem_step / 1024**2:.2f} MB | with Reserved: {(mem_step_res+mem_step) / 1024**2:.2f} MB"
+    )
 
 
 def run_and_log_profiler(
@@ -160,8 +110,7 @@ def run_and_log_profiler(
 
     torch.cuda.empty_cache()
     torch.cuda.reset_peak_memory_stats()
-    
-    
+
 
 def _parse_mem_str_to_bytes(s: str) -> int:
     s = s.strip()
