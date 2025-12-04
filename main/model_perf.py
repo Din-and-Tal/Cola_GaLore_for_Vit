@@ -8,7 +8,7 @@ from contextlib import redirect_stdout
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import torch
-from Trainer import Trainer
+from train.Trainer import Trainer
 
 
 # TODO: fix memory allocation between configs

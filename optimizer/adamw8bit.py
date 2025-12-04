@@ -105,7 +105,7 @@ class AdamW8bit(Optimizer2State):
 
                 self.prefetch_state(p)
                 self.update_step(group, p, gindex, pindex)
-                torch.cuda.synchronize()
+                torch.cuda.synchronize()  # TODO: might be slow, check if needed
 
                 # GaLore Projection Back
                 if "rank" in group:

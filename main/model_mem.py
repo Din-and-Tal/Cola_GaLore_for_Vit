@@ -5,7 +5,7 @@ from contextlib import redirect_stdout
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from Trainer import Trainer
+from train.Trainer import Trainer
 
 
 def print_model_layers(model, indent=0, prefix=""):
