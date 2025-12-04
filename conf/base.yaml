@@ -5,6 +5,7 @@
     debug_data_scale: 0.1
     PROFILE_MEMORY: false
     size: tiny
+    limit_train_steps: false
 
     vit_presents:
       tiny:
@@ -30,6 +31,13 @@
          NUM_HIDDEN_LAYERS: 24
          NUM_ATTENTION_HEADS: 16
          INTERMEDIATE_SIZE: 4096
+      
+      huge:
+         HIDDEN_SIZE: 1280
+         NUM_HIDDEN_LAYERS: 32
+         NUM_ATTENTION_HEADS: 16
+         INTERMEDIATE_SIZE: 5120
+         TOTAL_PARAMS: 632_000_000
 
     HIDDEN_SIZE: ${vit_presents.${size}.HIDDEN_SIZE}
     NUM_HIDDEN_LAYERS: ${vit_presents.${size}.NUM_HIDDEN_LAYERS}
