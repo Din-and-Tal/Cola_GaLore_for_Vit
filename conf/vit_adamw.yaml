@@ -2,5 +2,5 @@
     - base
     - _self_
     
-    MODEL_NAME: 'vit'
-    OPTIMIZER_NAME: "adamw"  # 'adamw', 'galore8', 'galore8_per_layer'
+    model_name: 'vit'
+    optimizer_name: "adamw"  # 'adamw', 'galore8', 'galore8_per_layer'

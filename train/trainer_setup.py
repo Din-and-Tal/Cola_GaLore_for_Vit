@@ -30,12 +30,10 @@ class Trainer:
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        set_seed(cfg.SEED)
+        set_seed(cfg.seed)
 
         # 2. Data
-        self.loaders.train, self.loaders.val, self.loaders.test = get_data_loaders(
-            cfg
-        )
+        self.loaders.train, self.loaders.val, self.loaders.test = get_data_loaders(cfg)
 
         # 3. Model & Measure Memory
         # TODO: check how to make custom model go to gpu (ColaViTForImageClassification)
@@ -48,20 +46,16 @@ class Trainer:
         # Cosine Annealing Scheduler
         self.scheduler = CosineAnnealingWarmupRestarts(
             optimizer=self.optimizer,
-            first_cycle_steps=cfg.SCHEDULER_FIRST_CYCLE_STEPS,
-            cycle_mult=cfg.SCHEDULER_CYCLE_MULT,
-            max_lr=cfg.SCHEDULER_MAX_LR,
-            min_lr=cfg.SCHEDULER_MIN_LR,
-            warmup_steps=cfg.SCHEDULER_WARMUP_STEPS,
-            gamma=cfg.SCHEDULER_GAMMA,
+            first_cycle_steps=cfg.scheduler_first_cycle_steps,
+            cycle_mult=cfg.scheduler_cycle_mult,
+            max_lr=cfg.scheduler_max_lr,
+            min_lr=cfg.scheduler_min_lr,
+            warmup_steps=cfg.scheduler_warmup_steps,
+            gamma=cfg.scheduler_gamma,
         )
 
-
-
-
-
-        if cfg.LOAD_MODEL:
-            modelPath = os.path.join(cfg.OUTPUT_DIR, "model.pth")
+        if cfg.load_model:
+            modelPath = os.path.join(cfg.output_dir, "model.pth")
             load_model(
                 model=self.model,
                 optimizer=self.optimizer,
@@ -73,27 +67,27 @@ class Trainer:
 
         # 5. Wandb Initialization
         # TODO: capture important data
-        if cfg.USE_WANDB:
+        if cfg.use_wandb:
             self.wandb = wandb.init(
-                project=cfg.WANDB_PROJECT_NAME,
-                name=f"{cfg.MODEL_NAME}_{cfg.OPTIMIZER_NAME}_{cfg.DATASET_NAME}",
-                entity=cfg.WANDB_TEAM_NAME,
+                project=cfg.wandb_project_name,
+                name=f"{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
+                entity=cfg.wandb_team_name,
                 config={
-                    "model_name": cfg.MODEL_NAME,
-                    "dataset": cfg.DATASET_NAME,
-                    "epochs": cfg.NUM_EPOCHS,
-                    "batch_size": cfg.BATCH_SIZE,
-                    "learning_rate": cfg.LEARNING_RATE,
-                    "weight_decay": cfg.WEIGHT_DECAY,
-                    "image_size": cfg.IMAGE_SIZE,
-                    "patch_size": cfg.PATCH_SIZE,
-                    "cola_rank": cfg.COLA_RANK,
+                    "model_name": cfg.model_name,
+                    "dataset": cfg.dataset_name,
+                    "epochs": cfg.num_epochs,
+                    "batch_size": cfg.batch_size,
+                    "learning_rate": cfg.learning_rate,
+                    "weight_decay": cfg.weight_decay,
+                    "image_size": cfg.image_size,
+                    "patch_size": cfg.patch_size,
+                    "cola_rank": cfg.cola_rank,
                 },
             )
 
         # 6. run one profiling pass to get HTML memory timeline
-        if getattr(cfg, "PROFILE_MEMORY", False):
-            run_name = f"{self.cfg.MODEL_NAME}_{self.cfg.OPTIMIZER_NAME}_{self.cfg.DATASET_NAME}"
+        if getattr(cfg, "profile_memory", False):
+            run_name = f"{self.cfg.model_name}_{self.cfg.optimizer_name}_{self.cfg.dataset_name}"
             profile_memory(
                 model=self.model,
                 optimizer=self.optimizer,
@@ -107,7 +101,6 @@ class Trainer:
 
         # Check that nothing is None
         validate_trainer_initialization(self)
-        
+
     def train(self):
         train_loop(self)
-

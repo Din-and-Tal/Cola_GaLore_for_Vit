@@ -24,15 +24,15 @@ def get_optimizer(model, cfg):
     # 4. OPTIMIZER & SCHEDULER
     # ============================
     optimizer, optimizer_dict = None, None
-    opt_name = cfg.OPTIMIZER_NAME
+    opt_name = cfg.optimizer_name
     print(f"Using optimizer: {opt_name}")
 
     if opt_name == "adamw":
         # 1) Plain AdamW on all parameters
         optimizer = optim.AdamW(
             model.parameters(),
-            lr=cfg.LEARNING_RATE,
-            weight_decay=cfg.WEIGHT_DECAY,
+            lr=cfg.learning_rate,
+            weight_decay=cfg.weight_decay,
         )
 
     elif opt_name == "galore8":
@@ -41,20 +41,20 @@ def get_optimizer(model, cfg):
         param_groups = [
             {
                 "params": non_galore_params,
-                "weight_decay": cfg.WEIGHT_DECAY,
+                "weight_decay": cfg.weight_decay,
             },
             {
                 "params": galore_params,
-                "rank": cfg.GLORA_RANK,
-                "update_proj_gap": cfg.GLORA_UPDATE_PROJ_GAP,
-                "scale": cfg.GLORA_SCALE,
-                "proj_type": cfg.GLORA_PROJ_TYPE,
-                "weight_decay": cfg.WEIGHT_DECAY,
+                "rank": cfg.glora_rank,
+                "update_proj_gap": cfg.glora_update_proj_gap,
+                "scale": cfg.glora_scale,
+                "proj_type": cfg.glora_proj_type,
+                "weight_decay": cfg.weight_decay,
             },
         ]
         optimizer = GaLoreAdamW8bit(
             param_groups,
-            lr=cfg.LEARNING_RATE,
+            lr=cfg.learning_rate,
         )
 
     elif opt_name == "galore8_per_layer":
@@ -64,8 +64,8 @@ def get_optimizer(model, cfg):
         # AdamW for non-GaLore params
         optimizer = optim.AdamW(
             non_galore_params,
-            lr=cfg.LEARNING_RATE,
-            weight_decay=cfg.WEIGHT_DECAY,
+            lr=cfg.learning_rate,
+            weight_decay=cfg.weight_decay,
         )
 
         # One GaLoreAdamW8bit per big weight param
@@ -75,14 +75,14 @@ def get_optimizer(model, cfg):
                 [
                     {
                         "params": galore_params,
-                        "rank": cfg.GLORA_RANK,
-                        "update_proj_gap": cfg.GLORA_UPDATE_PROJ_GAP,
-                        "scale": cfg.GLORA_SCALE,
-                        "proj_type": cfg.GLORA_PROJ_TYPE,
-                        "weight_decay": cfg.WEIGHT_DECAY,
+                        "rank": cfg.glora_rank,
+                        "update_proj_gap": cfg.glora_update_proj_gap,
+                        "scale": cfg.glora_scale,
+                        "proj_type": cfg.glora_proj_type,
+                        "weight_decay": cfg.weight_decay,
                     }
                 ],
-                lr=cfg.LEARNING_RATE,
+                lr=cfg.learning_rate,
             )
 
         # Hook to update that param after grad accumulation

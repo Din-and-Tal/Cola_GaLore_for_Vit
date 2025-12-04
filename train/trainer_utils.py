@@ -3,19 +3,21 @@ import torch
 import random
 import numpy as np
 
+
 def set_seed(seed):
-    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8' # will increase library footprint in GPU memory by approximately 24MiB
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = (
+        ":4096:8"  # will increase library footprint in GPU memory by approximately 24MiB
+    )
 
     torch.manual_seed(seed)
     random.seed(seed)
     np.random.seed(seed)
-    
+
     torch.backends.cudnn.benchmark = False
     torch.use_deterministic_algorithms(True)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed) 
-
+        torch.cuda.manual_seed_all(seed)
 
 
 def validate_trainer_initialization(trainer):
@@ -45,7 +47,7 @@ def validate_trainer_initialization(trainer):
         none_attrs.append("loaders.test")
 
     # Check wandb
-    if trainer.cfg.USE_WANDB and getattr(trainer, "wandb") is None:
+    if trainer.cfg.use_wandb and getattr(trainer, "wandb") is None:
         none_attrs.append("wandb")
 
     # Throw if any missing

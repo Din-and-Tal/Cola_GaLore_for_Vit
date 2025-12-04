@@ -27,16 +27,16 @@ def get_data_loaders(cfg):
     Splits the combined dataset according to TRAIN_RATIO, VAL_RATIO, TEST_RATIO.
     If fullTrain is False, only a fraction of the data is used.
     """
-    print(f"Loading dataset: {cfg.DATASET_NAME}...")
+    print(f"Loading dataset: {cfg.dataset_name}...")
 
     # Fraction of data to use when fullTrain is False
 
-    dataset_name = cfg.DATASET_NAME.lower()
+    dataset_name = cfg.dataset_name.lower()
     mean, std = STATS.get(dataset_name, STATS["imagefolder"])
 
     # Standard ViT transforms
     common_transforms = [
-        transforms.Resize((cfg.IMAGE_SIZE, cfg.IMAGE_SIZE)),
+        transforms.Resize((cfg.image_size, cfg.image_size)),
         transforms.ToTensor(),
         transforms.Normalize(mean=mean, std=std),
     ]
@@ -75,11 +75,11 @@ def get_data_loaders(cfg):
 
     # 2. Calculate Split Sizes
     total_size = len(full_aug)
-    train_size = int(cfg.TRAIN_RATIO * total_size)
-    val_size = int(cfg.VAL_RATIO * total_size)
+    train_size = int(cfg.train_ratio * total_size)
+    val_size = int(cfg.val_ratio * total_size)
 
     # reproducibility on multi-threaded loader -----------------------------------------------------
-    g = torch.Generator().manual_seed(cfg.SEED)
+    g = torch.Generator().manual_seed(cfg.seed)
 
     # 3. Generate Indices
     indices = torch.randperm(total_size, generator=g).tolist()
@@ -92,15 +92,9 @@ def get_data_loaders(cfg):
     debug_labels_count = int(len(test_indices) * cfg.debug_data_scale)
     # Reduce data if fullTrain is False
     if not cfg.full_train:
-        train_indices = train_indices[
-            : max(1, debug_labels_count)
-        ]
-        val_indices = val_indices[
-            : max(1, debug_labels_count)
-        ]
-        test_indices = test_indices[
-            : max(1, debug_labels_count)
-        ]
+        train_indices = train_indices[: max(1, debug_labels_count)]
+        val_indices = val_indices[: max(1, debug_labels_count)]
+        test_indices = test_indices[: max(1, debug_labels_count)]
         print(f"Using reduced data: {debug_labels_count} epoches")
 
     # 4. Create Subsets
@@ -112,9 +106,9 @@ def get_data_loaders(cfg):
     # 5. Create Loaders
     train_loader = DataLoader(
         train_dataset,
-        batch_size=cfg.BATCH_SIZE,
+        batch_size=cfg.batch_size,
         shuffle=True,
-        num_workers=cfg.NUM_WORKERS,
+        num_workers=cfg.num_workers,
         pin_memory=True,  # make so the memory wont spill into disk (non-paging)
         worker_init_fn=seed_worker,
         generator=g,
@@ -122,9 +116,9 @@ def get_data_loaders(cfg):
 
     val_loader = DataLoader(
         val_dataset,
-        batch_size=cfg.BATCH_SIZE,
+        batch_size=cfg.batch_size,
         shuffle=False,
-        num_workers=cfg.NUM_WORKERS,
+        num_workers=cfg.num_workers,
         pin_memory=True,
         worker_init_fn=seed_worker,
         generator=g,
@@ -132,9 +126,9 @@ def get_data_loaders(cfg):
 
     test_loader = DataLoader(
         test_dataset,
-        batch_size=cfg.BATCH_SIZE,
+        batch_size=cfg.batch_size,
         shuffle=False,
-        num_workers=cfg.NUM_WORKERS,
+        num_workers=cfg.num_workers,
         pin_memory=True,
         worker_init_fn=seed_worker,
         generator=g,

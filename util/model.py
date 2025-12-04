@@ -12,32 +12,32 @@ from model.v2_cola_model import convert_vit_to_cola_m
 def build_model(cfg):
 
     vit_config = ViTConfig(
-        image_size=cfg.IMAGE_SIZE,
-        patch_size=cfg.PATCH_SIZE,
-        num_channels=cfg.NUM_CHANNELS,
-        num_labels=cfg.NUM_CLASSES,
-        hidden_size=cfg.HIDDEN_SIZE,
-        num_hidden_layers=cfg.NUM_HIDDEN_LAYERS,
-        num_attention_heads=cfg.NUM_ATTENTION_HEADS,
-        intermediate_size=cfg.INTERMEDIATE_SIZE,
-        hidden_dropout_prob=cfg.HIDDEN_DROPOUT_PROB,
+        image_size=cfg.image_size,
+        patch_size=cfg.patch_size,
+        num_channels=cfg.num_channels,
+        num_labels=cfg.num_classes,
+        hidden_size=cfg.hidden_size,
+        num_hidden_layers=cfg.num_hidden_layers,
+        num_attention_heads=cfg.num_attention_heads,
+        intermediate_size=cfg.intermediate_size,
+        hidden_dropout_prob=cfg.hidden_dropout_prob,
     )
 
-    if cfg.MODEL_NAME == "vit":
+    if cfg.model_name == "vit":
         vit = ViTForImageClassification(vit_config)
         return vit
-    elif cfg.MODEL_NAME == "v1_cola":
+    elif cfg.model_name == "v1_cola":
         cola = ColaViTForImageClassification(
             config=ColaViTConfig(
-                rank=cfg.COLA_RANK,
-                lr_act_type=cfg.COLA_LR_ACT_TYPE,
+                rank=cfg.cola_rank,
+                lr_act_type=cfg.cola_lr_act_type,
                 **vit_config.to_dict(),  # Inherit all standard args
             )
         )
         return cola
-    elif cfg.MODEL_NAME == "v2_cola":
+    elif cfg.model_name == "v2_cola":
         v2_cola = ViTForImageClassification(vit_config)
-        v2_cola = convert_vit_to_cola_m(v2_cola, rank_ratio=cfg.COLA_RANK_RATIO)
+        v2_cola = convert_vit_to_cola_m(v2_cola, rank_ratio=cfg.cola_rank_ratio)
         return v2_cola
 
     raise ValueError(f"bad model name, ")
@@ -56,7 +56,7 @@ def save_model(
     optimizer_dict=None,
 ):
     # Ensure output directory exists
-    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
+    os.makedirs(cfg.output_dir, exist_ok=True)
 
     state_dict = {
         "epoch": epoch,
@@ -64,8 +64,8 @@ def save_model(
         "scheduler_state_dict": scheduler.state_dict(),
         "loss": train_loss,
         "best_acc": best_acc,
-        "use_cola": cfg.USE_COLA,
-        "optimizer_name": cfg.OPTIMIZER_NAME,
+        "use_cola": cfg.use_cola,
+        "optimizer_name": cfg.optimizer_name,
     }
 
     # Handle different optimizer types
@@ -82,16 +82,14 @@ def save_model(
 
     if val_acc > best_acc:
         best_acc = val_acc
-        save_path = os.path.join(cfg.OUTPUT_DIR, "best_model.pth")
+        save_path = os.path.join(cfg.output_dir, "best_model.pth")
         torch.save(state_dict, save_path)
         print(f"--> New best model saved! ({best_acc:.2f}%) at {save_path}")
 
     return best_acc
 
 
-def load_model(
-    model, optimizer, scheduler, modelPath, device, optimizerParams=None
-):
+def load_model(model, optimizer, scheduler, modelPath, device, optimizerParams=None):
     if not os.path.exists(modelPath):
         print(f"!! Model not found at {modelPath}, starting from scratch.")
         return 0
@@ -122,7 +120,6 @@ def load_model(
 
         if scheduler is not None and "scheduler_state_dict" in loaded_model:
             scheduler.load_state_dict(loaded_model["scheduler_state_dict"])
-
 
         start_epoch = loaded_model.get("epoch", -1) + 1
 

@@ -13,7 +13,7 @@ def train_loop(trainer):
     print("\nStarting training...")
     start_time = time.time()
 
-    for epoch in range(cfg.NUM_EPOCHS):
+    for epoch in range(cfg.num_epochs):
         epoch_start = time.time()
         train_loss, train_acc = epoch_step(trainer, trainer.loaders.train, True)
         val_loss, val_acc = epoch_step(trainer, trainer.loaders.val, False)
@@ -32,16 +32,18 @@ def train_loop(trainer):
 
         # Wandb logging
         if trainer.wandb:
-            trainer.wandb.log({
-                "train_loss": train_loss,
-                "train_acc": train_acc,
-                "val_loss": val_loss,
-                "val_acc": val_acc,
-                "lr": lr,
-            })
+            trainer.wandb.log(
+                {
+                    "train_loss": train_loss,
+                    "train_acc": train_acc,
+                    "val_loss": val_loss,
+                    "val_acc": val_acc,
+                    "lr": lr,
+                }
+            )
 
         # Save best model
-        if cfg.SAVE_MODEL:
+        if cfg.save_model:
             best_acc = save_model(
                 trainer.model,
                 trainer.optimizer,

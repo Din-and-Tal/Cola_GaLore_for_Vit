@@ -14,7 +14,7 @@ config_names=(
 
 for config in "${config_names[@]}"; do
     echo "Running with config: $config"
-    python main/main.py --config-name $config full_train=false
+    python main/main.py --config-name $config full_train=false size=tiny
     echo "-----------------------------------"
     sleep 5
 done
