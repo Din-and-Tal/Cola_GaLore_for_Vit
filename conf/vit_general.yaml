@@ -1,0 +1,131 @@
+MODEL_NAME: 'vit'
+OPTIMIZER_NAME: "adamw"  # 'adamw', 'galore8', 'galore8_per_layer'
+MEM_MEASURE: false
+SEED: 42
+NUM_WORKERS: 2 # TODO: check best value
+
+
+limit_train_steps: false
+# ---------------------------
+# Data Settings
+# ---------------------------
+# Dataset choice: 'cifar10', 'cifar100', or 'imagefolder'
+DATASET_NAME: "cifar100"
+NUM_CLASSES: 100  # Change to 100 for CIFAR100
+
+# Data Split
+TRAIN_RATIO: 0.8
+VAL_RATIO: 0.1
+TEST_RATIO: 0.1
+
+# model saving/loading settings
+BASE_OUTPUT_DIR: "./saved_models"
+SAVE_MODEL: false
+LOAD_MODEL: false
+
+# ---------------------------
+# Profiling Options
+# ---------------------------
+PROFILE_MEMORY: true
+
+
+# ---------------------------
+# Model Hyperparameters
+# ---------------------------
+IMAGE_SIZE: 64
+PATCH_SIZE: 16
+NUM_CHANNELS: 3
+
+
+# ViT Architecture
+# Select ViT size from Python or CLI
+size: tiny   # one of: tiny, small, base, large, huge
+
+vit_presets:
+  tiny:
+    HIDDEN_SIZE: 192
+    NUM_HIDDEN_LAYERS: 12
+    NUM_ATTENTION_HEADS: 3
+    INTERMEDIATE_SIZE: 768
+    TOTAL_PARAMS: 5_700_000
+
+  small:
+    HIDDEN_SIZE: 384
+    NUM_HIDDEN_LAYERS: 12
+    NUM_ATTENTION_HEADS: 6
+    INTERMEDIATE_SIZE: 1536
+    TOTAL_PARAMS: 22_000_000
+
+  base:
+    HIDDEN_SIZE: 768
+    NUM_HIDDEN_LAYERS: 12
+    NUM_ATTENTION_HEADS: 12
+    INTERMEDIATE_SIZE: 3072
+    TOTAL_PARAMS: 86_000_000
+
+  large:
+    HIDDEN_SIZE: 1024
+    NUM_HIDDEN_LAYERS: 24
+    NUM_ATTENTION_HEADS: 16
+    INTERMEDIATE_SIZE: 4096
+    TOTAL_PARAMS: 307_000_000
+
+  huge:
+    HIDDEN_SIZE: 1280
+    NUM_HIDDEN_LAYERS: 32
+    NUM_ATTENTION_HEADS: 16
+    INTERMEDIATE_SIZE: 5120
+    TOTAL_PARAMS: 632_000_000
+
+# -------------------------------------------
+# Auto-resolved model parameters
+# -------------------------------------------
+
+HIDDEN_SIZE:          ${vit_presets.${size}.HIDDEN_SIZE}
+NUM_HIDDEN_LAYERS:    ${vit_presets.${size}.NUM_HIDDEN_LAYERS}
+NUM_ATTENTION_HEADS:  ${vit_presets.${size}.NUM_ATTENTION_HEADS}
+INTERMEDIATE_SIZE:    ${vit_presets.${size}.INTERMEDIATE_SIZE}
+TOTAL_PARAMS:         ${vit_presets.${size}.TOTAL_PARAMS}
+
+
+# ---------------------------
+# Cola Parameters
+# ---------------------------
+COLA_RANK: 0
+COLA_RANK_RATIO: 0.25
+COLA_LR_ACT_TYPE: "gelu"
+
+# ---------------------------
+# Glora Parameters
+# ---------------------------
+GLORA_RANK: 128
+GLORA_UPDATE_PROJ_GAP: 200
+GLORA_SCALE: 0.25
+GLORA_PROJ_TYPE: "std"
+
+# ---------------------------
+# Training Hyperparameters
+# ---------------------------
+NUM_EPOCHS: 10
+BATCH_SIZE: 256
+LEARNING_RATE: 1e-5
+WEIGHT_DECAY: 0.05
+WARMUP_EPOCHS: 1
+MAX_GRAD_NORM: 1.0
+HIDDEN_DROPOUT_PROB: 0.0
+
+# ---------------------------
+# Scheduler hyperparameters
+# ---------------------------
+SCHEDULER_FIRST_CYCLE_STEPS: 200
+SCHEDULER_CYCLE_MULT: 1.0
+SCHEDULER_MAX_LR: 0.1
+SCHEDULER_MIN_LR: 0.001
+SCHEDULER_WARMUP_STEPS: 50
+SCHEDULER_GAMMA: 0.5
+
+
+# wandb configuration
+USE_WANDB: true
+WANDB_PROJECT_NAME: "vit-cifar100_v2"
+WANDB_TEAM_NAME: "din-alon-technion-israel-institute-of-technology"

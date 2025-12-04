@@ -75,23 +75,32 @@ def epoch_step(trainer, loader, is_training):
     ctx = nullcontext() if is_training else torch.no_grad()
     model.train() if is_training else model.eval()
 
-    for inputs, targets in loader:
+    for batch_idx, (inputs, targets) in enumerate(loader):
+
+        # ---- LIMIT TRAINING STEPS HERE ----
+        if getattr(trainer.cfg, "limit_train_steps", False) and batch_idx >= 3:
+            break
+        # -----------------------------------
+
         inputs, targets = inputs.to(device), targets.to(device)
 
-        with ctx:
+        if is_training:
             outputs = model(pixel_values=inputs).logits
             loss = loss_fn(outputs, targets)
 
-        if is_training:
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+        else:
+            with torch.no_grad():
+                outputs = model(pixel_values=inputs).logits
+                loss = loss_fn(outputs, targets)
 
         total_loss += loss.item()
         _, preds = outputs.max(1)
         correct += preds.eq(targets).sum().item()
         total += targets.size(0)
 
-    avg_loss = total_loss / len(loader)
+    avg_loss = total_loss / max(1, (batch_idx + 1))
     acc = 100.0 * correct / total if total > 0 else 0.0
     return avg_loss, acc
