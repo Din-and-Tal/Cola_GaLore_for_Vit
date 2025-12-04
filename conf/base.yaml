@@ -2,7 +2,7 @@
     - _self_
    
     full_train: true
-    debug_batches: 40
+    debug_data_scale: 0.1
 
     size: tiny
 

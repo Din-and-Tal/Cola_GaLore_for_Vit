@@ -89,17 +89,17 @@ def get_data_loaders(cfg):
     train_indices = indices[:train_size]
     val_indices = indices[train_size : train_size + val_size]
     test_indices = indices[train_size + val_size :]
-
+    REDUCED_DATA_FRACTION = cfg.debug_data_scale
     # Reduce data if fullTrain is False
     if not cfg.full_train:
         train_indices = train_indices[
-            : cfg.debug_batches
+            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
         ]
         val_indices = val_indices[
-            : cfg.debug_batches
+            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
         ]
         test_indices = test_indices[
-            : cfg.debug_batches
+            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
         ]
         print(f"Using reduced data: {cfg.debug_batches} epoches")
 

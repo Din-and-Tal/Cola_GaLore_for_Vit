@@ -16,6 +16,7 @@ for config in "${config_names[@]}"; do
     echo "Running with config: $config"
     python main/main.py --config-name $config full_train=false
     echo "-----------------------------------"
+    sleep 5
 done
 
 echo "All benchmarks completed!"
