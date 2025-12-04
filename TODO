@@ -3,7 +3,8 @@ urgent:
 TODO:!!!! clear unused parameters
 TODO: eval each k epochs
 TODO: refactor camel snake all code base and lower-case letters on config file
-
+TODO: move to tinyimagenet
+TODO: finding good hyperparams for training,scheduler:merge lr params (if needed)
 
 mid:
 
