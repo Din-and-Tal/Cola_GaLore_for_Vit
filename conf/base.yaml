@@ -1,6 +1,9 @@
     defaults:
     - _self_
    
+    full_train: true
+    debug_batches: 40
+
     size: tiny
 
     vit_presents:
@@ -9,34 +12,29 @@
          NUM_HIDDEN_LAYERS: 12
          NUM_ATTENTION_HEADS: 3
          INTERMEDIATE_SIZE: 768
-         TOTAL_PARAMS: 5_700_000
 
       small:
          HIDDEN_SIZE: 384
          NUM_HIDDEN_LAYERS: 12
          NUM_ATTENTION_HEADS: 6
          INTERMEDIATE_SIZE: 1536
-         TOTAL_PARAMS: 22_000_000
 
       base:
          HIDDEN_SIZE: 768
          NUM_HIDDEN_LAYERS: 12
          NUM_ATTENTION_HEADS: 12
          INTERMEDIATE_SIZE: 3072
-         TOTAL_PARAMS: 86_000_000
 
       large:
          HIDDEN_SIZE: 1024
          NUM_HIDDEN_LAYERS: 24
          NUM_ATTENTION_HEADS: 16
          INTERMEDIATE_SIZE: 4096
-         TOTAL_PARAMS: 307_000_000
 
     HIDDEN_SIZE: ${vit_presents.${size}.HIDDEN_SIZE}
     NUM_HIDDEN_LAYERS: ${vit_presents.${size}.NUM_HIDDEN_LAYERS}
     NUM_ATTENTION_HEADS: ${vit_presents.${size}.NUM_ATTENTION_HEADS}
     INTERMEDIATE_SIZE: ${vit_presents.${size}.INTERMEDIATE_SIZE}
-    TOTAL_PARAMS: ${vit_presents.${size}.TOTAL_PARAMS}
 
     SEED: 42
     NUM_WORKERS: 2 # TODO: check best value
@@ -66,6 +64,7 @@
     GLORA_PROJ_TYPE: "std"
 
     NUM_EPOCHS: 1
+    EVAL_FREQUENCY: 5
     BATCH_SIZE: 64
     LEARNING_RATE: 1e-3
     WEIGHT_DECAY: 0.05
@@ -83,3 +82,5 @@
     USE_WANDB: true
     WANDB_PROJECT_NAME: "efficient_vit_pretraining"
     WANDB_TEAM_NAME: "din-alon-technion-israel-institute-of-technology"
+
+    config_name: ${hydra:job.config_name }

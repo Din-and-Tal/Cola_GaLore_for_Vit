@@ -10,7 +10,7 @@ from Trainer import Trainer
 # TODO: override with cmdline cfg parameter and iterate in code
 # TODO: make base cfg
 
-@hydra.main(version_base=None, config_path="../conf", config_name="vit_adamw")
+@hydra.main(version_base=None, config_path="../conf", config_name="vit_glora")
 def main(cfg):
     trainer = Trainer(cfg)
     trainer.train()

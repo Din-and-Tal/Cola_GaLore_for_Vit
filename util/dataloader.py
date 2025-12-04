@@ -21,7 +21,7 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def get_data_loaders(cfg, debug, fullTrain):
+def get_data_loaders(cfg):
     """
     Returns training, validation and test dataloaders based on config.
     Splits the combined dataset according to TRAIN_RATIO, VAL_RATIO, TEST_RATIO.
@@ -30,7 +30,6 @@ def get_data_loaders(cfg, debug, fullTrain):
     print(f"Loading dataset: {cfg.DATASET_NAME}...")
 
     # Fraction of data to use when fullTrain is False
-    REDUCED_DATA_FRACTION = 0.1
 
     dataset_name = cfg.DATASET_NAME.lower()
     mean, std = STATS.get(dataset_name, STATS["imagefolder"])
@@ -83,7 +82,7 @@ def get_data_loaders(cfg, debug, fullTrain):
     g = torch.Generator().manual_seed(cfg.SEED)
 
     # 3. Generate Indices
-    indices = torch.randperm(total_size, generator=g if debug else None).tolist()
+    indices = torch.randperm(total_size, generator=g).tolist()
 
     # -----------------------------------------------------------------------------------------------
 
@@ -92,17 +91,17 @@ def get_data_loaders(cfg, debug, fullTrain):
     test_indices = indices[train_size + val_size :]
 
     # Reduce data if fullTrain is False
-    if not fullTrain:
+    if not cfg.full_train:
         train_indices = train_indices[
-            : max(1, int(len(train_indices) * REDUCED_DATA_FRACTION))
+            : cfg.debug_batches
         ]
         val_indices = val_indices[
-            : max(1, int(len(val_indices) * REDUCED_DATA_FRACTION))
+            : cfg.debug_batches
         ]
         test_indices = test_indices[
-            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
+            : cfg.debug_batches
         ]
-        print(f"Using reduced data: {REDUCED_DATA_FRACTION*100:.0f}% of full dataset")
+        print(f"Using reduced data: {cfg.debug_batches} epoches")
 
     # 4. Create Subsets
     # Train gets Augmented dataset, Val/Test get Clean dataset
@@ -117,8 +116,8 @@ def get_data_loaders(cfg, debug, fullTrain):
         shuffle=True,
         num_workers=cfg.NUM_WORKERS,
         pin_memory=True,  # make so the memory wont spill into disk (non-paging)
-        worker_init_fn=seed_worker if debug else None,
-        generator=g if debug else None,
+        worker_init_fn=seed_worker,
+        generator=g,
     )
 
     val_loader = DataLoader(
@@ -127,8 +126,8 @@ def get_data_loaders(cfg, debug, fullTrain):
         shuffle=False,
         num_workers=cfg.NUM_WORKERS,
         pin_memory=True,
-        worker_init_fn=seed_worker if debug else None,
-        generator=g if debug else None,
+        worker_init_fn=seed_worker,
+        generator=g,
     )
 
     test_loader = DataLoader(
@@ -137,8 +136,8 @@ def get_data_loaders(cfg, debug, fullTrain):
         shuffle=False,
         num_workers=cfg.NUM_WORKERS,
         pin_memory=True,
-        worker_init_fn=seed_worker if debug else None,
-        generator=g if debug else None,
+        worker_init_fn=seed_worker,
+        generator=g,
     )
     print(
         f"Batches -> Train: {len(train_loader)}, Val: {len(val_loader)}, Test: {len(test_loader)}"

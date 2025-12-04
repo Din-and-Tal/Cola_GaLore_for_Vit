@@ -37,7 +37,7 @@ def build_model(cfg):
         return cola
     elif cfg.MODEL_NAME == "v2_cola":
         v2_cola = ViTForImageClassification(vit_config)
-        v2_cola = convert_vit_to_cola_m(v2_cola, rank_ratio=0.25)
+        v2_cola = convert_vit_to_cola_m(v2_cola, rank_ratio=cfg.COLA_RANK_RATIO)
         return v2_cola
 
     raise ValueError(f"bad model name, ")
@@ -48,7 +48,6 @@ def save_model(
     model,
     optimizer,
     scheduler,
-    scaler,
     epoch,
     train_loss,
     val_acc,
@@ -63,7 +62,6 @@ def save_model(
         "epoch": epoch,
         "model_state_dict": model.state_dict(),
         "scheduler_state_dict": scheduler.state_dict(),
-        "scaler_state_dict": scaler.state_dict(),
         "loss": train_loss,
         "best_acc": best_acc,
         "use_cola": cfg.USE_COLA,
@@ -92,7 +90,7 @@ def save_model(
 
 
 def load_model(
-    model, optimizer, scheduler, scaler, modelPath, device, optimizerParams=None
+    model, optimizer, scheduler, modelPath, device, optimizerParams=None
 ):
     if not os.path.exists(modelPath):
         print(f"!! Model not found at {modelPath}, starting from scratch.")
@@ -124,8 +122,7 @@ def load_model(
 
         if scheduler is not None and "scheduler_state_dict" in loaded_model:
             scheduler.load_state_dict(loaded_model["scheduler_state_dict"])
-        if scaler is not None and "scaler_state_dict" in loaded_model:
-            scaler.load_state_dict(loaded_model["scaler_state_dict"])
+
 
         start_epoch = loaded_model.get("epoch", -1) + 1
 

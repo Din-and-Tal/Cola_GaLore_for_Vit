@@ -4,7 +4,6 @@ import torch
 from contextlib import nullcontext
 from types import SimpleNamespace
 
-from tqdm import tqdm
 import wandb
 
 from optimizer.optimizer import get_optimizer
@@ -16,8 +15,7 @@ from util.scheduler import CosineAnnealingWarmupRestarts
 
 class Trainer:
 
-    def __init__(self, cfg, debug=True,fullTrain=True):
-        self.debug = debug
+    def __init__(self, cfg):
         self.cfg = cfg
         self.wandb = None  # optional
         self.model = None
@@ -25,18 +23,14 @@ class Trainer:
         self.optimizerParams = {}  # for galore8PerLayer
         self.lossFunc = None
         self.scheduler = None
-        self.scaler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
 
-        if debug:
-            set_seed(cfg.SEED)
+        set_seed(cfg.SEED)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # 2. Data
-        self.loaders.train, self.loaders.val, self.loaders.test = get_data_loaders(
-            cfg, debug,fullTrain
-        )
+        self.loaders.train, self.loaders.val, self.loaders.test = get_data_loaders(cfg)
 
         # 3. Model & Measure Memory
         # TODO: check how to make custom model go to gpu (ColaViTForImageClassification)
@@ -57,16 +51,12 @@ class Trainer:
             gamma=cfg.SCHEDULER_GAMMA,
         )
 
-        # Mixed Precision Scaler
-        self.scaler = torch.GradScaler(device=self.device, enabled=cfg.USE_AMP)
-
         if cfg.LOAD_MODEL:
             modelPath = os.path.join(cfg.OUTPUT_DIR, "model.pth")
             load_model(
                 model=self.model,
                 optimizer=self.optimizer,
                 scheduler=self.scheduler,
-                scaler=self.scaler,
                 modelPath=modelPath,
                 device=self.device,
                 optimizerParams=self.optimizerParams,
@@ -77,7 +67,7 @@ class Trainer:
         if cfg.USE_WANDB:
             self.wandb = wandb.init(
                 project=cfg.WANDB_PROJECT_NAME,
-                name=f"{cfg.MODEL_NAME}_{cfg.OPTIMIZER_NAME}_{cfg.DATASET_NAME}",
+                name=f"{cfg.size}_{cfg.MODEL_NAME}_{cfg.OPTIMIZER_NAME}_{cfg.DATASET_NAME}",
                 entity=cfg.WANDB_TEAM_NAME,
                 config={
                     "model_name": cfg.MODEL_NAME,
@@ -100,24 +90,24 @@ class Trainer:
         print("\nStarting training...")
         start_time = time.time()
         for epoch in range(self.cfg.NUM_EPOCHS):
-
-            # Train
-            train_loss, train_acc = self._epoch_step(
-                loader=self.loaders.train, is_training=True, epoch=epoch
-            )
-
-            # Validate
-            val_loss, val_acc = self._epoch_step(
-                loader=self.loaders.val, is_training=False, epoch=epoch
-            )
-            # Scheduler Step
-            self.scheduler.step()  # type: ignore
             current_lr = self.optimizer.param_groups[0]["lr"]  # type: ignore
 
-            print(
-                f"Summary Ep {epoch+1}: Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}% | "
-                f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}% | LR: {current_lr:.2e}"
+            train_loss, train_acc = self._epoch_step(
+                loader=self.loaders.train, is_training=True
             )
+            print(
+                f"Summary Ep {epoch+1}/{self.cfg.NUM_EPOCHS}: Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}% | LR: {current_lr:.2e}"
+            )
+
+            val_loss, val_acc = None, None
+            if self.cfg.full_train:
+                val_loss, val_acc = self._epoch_step(
+                    loader=self.loaders.val, is_training=False
+                )
+                print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}%")
+
+            self.scheduler.step()  # type: ignore
+
             # TODO: check if running wandb offline increases speed (not sync)
             if self.wandb:
                 self.wandb.log(  # type: ignore
@@ -131,51 +121,44 @@ class Trainer:
                 )
 
             # saving model
-            if self.cfg.SAVE_MODEL:
-                best_acc = save_model(
-                    self.model,
-                    self.optimizer,
-                    self.scheduler,
-                    self.scaler,
-                    epoch,
-                    train_loss,
-                    val_acc,
-                    best_acc,
-                    self.cfg,
-                    optimizer_dict=self.optimizerParams,  # Pass optimizer_dict
-                )
-            # TODO: check how torch.cuda.empty_cache() effects training
+            if val_acc and val_acc > best_acc:
+                best_acc = val_acc
+                if self.cfg.SAVE_MODEL:
+                    save_model(
+                        self.model,
+                        self.optimizer,
+                        self.scheduler,
+                        epoch,
+                        train_loss,
+                        val_acc,
+                        best_acc,
+                        self.cfg,
+                        optimizer_dict=self.optimizerParams,  # Pass optimizer_dict
+                    )
 
         total_time = time.time() - start_time
         print(f"\nTraining complete in {total_time/60:.2f} minutes.")
         print(f"Best Validation Accuracy: {best_acc:.2f}%")
 
-        test_acc = self._epoch_step(
-            loader=self.loaders.test, is_training=False, epoch=epoch
-        )
-
-        print(f"Test Accuracy: {best_acc:.2f}%")
+        test_acc = None
+        if self.cfg.full_train:
+            test_acc = self._epoch_step(
+                loader=self.loaders.test, is_training=False
+            )
+            print(f"Test Accuracy: {best_acc:.2f}%")
 
         if self.wandb:
             self.wandb.log({"test_acc": test_acc})
             self.wandb.finish()
 
-    def _epoch_step(self, loader, is_training, epoch):
+    def _epoch_step(self, loader, is_training):
         total_loss, correct, total = 0, 0, 0
 
         # TODO: check if ctx is right
-        if is_training:
-            ctx = torch.autocast("cuda") if self.cfg.USE_AMP else nullcontext()
-        else:
-            ctx = torch.no_grad()
-
-        pbar = tqdm(
-            loader,
-            desc=f"Epoch {epoch+1}/{self.cfg.NUM_EPOCHS} [{'Train' if is_training else 'Val'}]",
-        )
+        ctx = nullcontext() if is_training else torch.no_grad()
 
         self.model.train() if is_training else self.model.eval()  # type: ignore
-        for inputs, targets in pbar:
+        for i, (inputs, targets) in enumerate(loader):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
             # Forward
@@ -186,30 +169,14 @@ class Trainer:
             # Backward
             if is_training:
                 self.optimizer.zero_grad()  # type: ignore
-
-                if self.cfg.USE_AMP:
-                    self.scaler.scale(loss).backward()  # type: ignore
-                    self.scaler.step(self.optimizer)  # type: ignore
-                    self.scaler.update()  # type: ignore
-                else:
-                    loss.backward()
-                    self.optimizer.step()  # type: ignore
+                loss.backward()
+                self.optimizer.step()  # type: ignore
 
             # Stats
             total_loss += loss.item()
             _, preds = outputs.max(1)
             correct += preds.eq(targets).sum().item()
             total += targets.size(0)
-            # log pbar
-            acc = 100.0 * correct / total
-            lr = self.optimizer.param_groups[0]["lr"]  # type: ignore
-            pbar.set_postfix(
-                {
-                    "Loss": f"{loss.item():.4f}",
-                    "Acc": f"{acc:.2f}%",
-                    "LR": f"{lr:.2e}",
-                }
-            )
 
         return total_loss / len(loader), 100.0 * correct / total
 
@@ -221,7 +188,6 @@ class Trainer:
             "optimizer",
             "lossFunc",
             "scheduler",
-            "scaler",
         ]:
             if getattr(self, attr_name) is None:
                 none_attrs.append(attr_name)
