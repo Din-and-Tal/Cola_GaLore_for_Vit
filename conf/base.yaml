@@ -1,12 +1,12 @@
 defaults:
   - _self_
 
+use_wandb: true
+
 full_train: true
-debug_data_scale: 0.01
+debug_data_scale: 0.001
 size: tiny
 profile_memory: false
-# TODO: pick one: limit_train_steps or full_train
-limit_train_steps: false
 
 vit_presents:
   tiny:
@@ -88,7 +88,6 @@ scheduler_min_lr: 0.001
 scheduler_warmup_steps: 50
 scheduler_gamma: 0.5
 
-use_wandb: true
 wandb_project_name: "efficient_vit_pretraining"
 wandb_team_name: "din-alon-technion-israel-institute-of-technology"
 

@@ -53,7 +53,7 @@ def train_loop(trainer):
                 val_acc,
                 best_acc,
                 cfg,
-                optimizer_dict=trainer.optimizerParams,
+                optimizer_dict=trainer.optimizer_params,
             )
 
     # Final test
@@ -69,7 +69,7 @@ def train_loop(trainer):
 def epoch_step(trainer, loader, is_training):
     model = trainer.model
     optimizer = trainer.optimizer
-    loss_fn = trainer.lossFunc
+    loss_fn = trainer.loss_func
     device = trainer.device
 
     total_loss, correct, total = 0.0, 0, 0
@@ -78,11 +78,6 @@ def epoch_step(trainer, loader, is_training):
     model.train() if is_training else model.eval()
 
     for batch_idx, (inputs, targets) in enumerate(loader):
-
-        # ---- LIMIT TRAINING STEPS HERE ----
-        if getattr(trainer.cfg, "limit_train_steps", False) and batch_idx >= 3:
-            break
-        # -----------------------------------
 
         inputs, targets = inputs.to(device), targets.to(device)
 

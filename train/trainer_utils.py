@@ -32,7 +32,7 @@ def validate_trainer_initialization(trainer):
         "cfg",
         "model",
         "optimizer",
-        "lossFunc",
+        "loss_func",
         "scheduler",
     ]:
         if getattr(trainer, attr_name) is None:

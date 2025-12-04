@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from train.trainer_setup import Trainer
 
-@hydra.main(version_base=None, config_path="../conf", config_name="vit_glora")
+@hydra.main(version_base=None, config_path="../conf", config_name="") # empty so we wont run without run.sh
 def main(cfg):
     trainer = Trainer(cfg)
     trainer.train()

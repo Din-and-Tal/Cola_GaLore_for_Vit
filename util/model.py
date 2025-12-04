@@ -89,13 +89,13 @@ def save_model(
     return best_acc
 
 
-def load_model(model, optimizer, scheduler, modelPath, device, optimizerParams=None):
-    if not os.path.exists(modelPath):
-        print(f"!! Model not found at {modelPath}, starting from scratch.")
+def load_model(model, optimizer, scheduler, model_path, device, optimizer_params=None):
+    if not os.path.exists(model_path):
+        print(f"!! Model not found at {model_path}, starting from scratch.")
         return 0
 
-    print(f"Loading model from {modelPath}...")
-    loaded_model = torch.load(modelPath, map_location=device, weights_only=False)
+    print(f"Loading model from {model_path}...")
+    loaded_model = torch.load(model_path, map_location=device, weights_only=False)
 
     # Check if it's a full model (dict with metadata) or just weights
     if isinstance(loaded_model, dict) and "model_state_dict" in loaded_model:
@@ -106,17 +106,19 @@ def load_model(model, optimizer, scheduler, modelPath, device, optimizerParams=N
             optimizer.load_state_dict(loaded_model["optimizer_state_dict"])
 
         # Load per-layer optimizer dict if present
-        if optimizerParams is not None and "optimizer_dict_state" in loaded_model:
+        if optimizer_params is not None and "optimizer_dict_state" in loaded_model:
             optimizer_dict_state = loaded_model["optimizer_dict_state"]
             optimizer_dict_keys = loaded_model["optimizer_dict_keys"]
 
             # Match parameters by their id
-            param_id_map = {id(p): p for p in optimizerParams.keys()}
+            param_id_map = {id(p): p for p in optimizer_params.keys()}
             for saved_id, saved_state in zip(
                 optimizer_dict_keys, optimizer_dict_state.values()
             ):
                 if saved_id in param_id_map:
-                    optimizerParams[param_id_map[saved_id]].load_state_dict(saved_state)
+                    optimizer_params[param_id_map[saved_id]].load_state_dict(
+                        saved_state
+                    )
 
         if scheduler is not None and "scheduler_state_dict" in loaded_model:
             scheduler.load_state_dict(loaded_model["scheduler_state_dict"])

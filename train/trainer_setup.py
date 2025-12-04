@@ -24,8 +24,8 @@ class Trainer:
         self.wandb = None  # optional
         self.model = None
         self.optimizer = None
-        self.optimizerParams = {}  # for galore8PerLayer
-        self.lossFunc = None
+        self.optimizer_params = {}  # for galore8PerLayer
+        self.loss_func = None
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -40,8 +40,8 @@ class Trainer:
         self.model = build_model(cfg).to(self.device)
 
         # 4. Optimizer & Scheduler
-        self.optimizer, self.optimizerParams = get_optimizer(self.model, cfg)
-        self.lossFunc = torch.nn.CrossEntropyLoss()
+        self.optimizer, self.optimizer_params = get_optimizer(self.model, cfg)
+        self.loss_func = torch.nn.CrossEntropyLoss()
 
         # Cosine Annealing Scheduler
         self.scheduler = CosineAnnealingWarmupRestarts(
@@ -55,14 +55,14 @@ class Trainer:
         )
 
         if cfg.load_model:
-            modelPath = os.path.join(cfg.output_dir, "model.pth")
+            model_path = os.path.join(cfg.output_dir, "model.pth")
             load_model(
                 model=self.model,
                 optimizer=self.optimizer,
                 scheduler=self.scheduler,
-                modelPath=modelPath,
+                model_path=model_path,
                 device=self.device,
-                optimizerParams=self.optimizerParams,
+                optimizer_params=self.optimizer_params,
             )
 
         # 5. Wandb Initialization
@@ -70,7 +70,7 @@ class Trainer:
         if cfg.use_wandb:
             self.wandb = wandb.init(
                 project=cfg.wandb_project_name,
-                name=f"{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
+                name=f"{cfg.size}_{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
                 entity=cfg.wandb_team_name,
                 config={
                     "model_name": cfg.model_name,
@@ -91,7 +91,7 @@ class Trainer:
             profile_memory(
                 model=self.model,
                 optimizer=self.optimizer,
-                loss_fn=self.lossFunc,
+                loss_fn=self.loss_func,
                 loader=self.loaders.train,
                 num_iters=5,
                 device=self.device,

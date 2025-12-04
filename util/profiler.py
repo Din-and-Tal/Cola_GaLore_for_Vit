@@ -4,8 +4,7 @@ from torch.profiler import profile, ProfilerActivity
 import wandb
 
 
-
-def benchmark_training_memory(model, lossFunc, optimizer, input_data, target):
+def benchmark_training_memory(model, loss_func, optimizer, input_data, target):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = model.to(device)
     input_data = input_data.to(device)
@@ -20,7 +19,7 @@ def benchmark_training_memory(model, lossFunc, optimizer, input_data, target):
     mem_forward_res = torch.cuda.max_memory_reserved()
 
     # 2. Backward
-    loss = lossFunc(output, target)
+    loss = loss_func(output, target)
     loss.backward()
     mem_backward = torch.cuda.max_memory_allocated()
     mem_backward_res = torch.cuda.max_memory_reserved()
@@ -46,7 +45,7 @@ def run_and_log_profiler(
     model,
     images,
     labels,
-    lossFunc,
+    loss_func,
     device,
     tag: str = "profiler",
     step: int | None = None,
@@ -70,7 +69,7 @@ def run_and_log_profiler(
         record_shapes=True,
     ) as prof:
         outputs = model(images)
-        loss = lossFunc(outputs.logits, labels)
+        loss = loss_func(outputs.logits, labels)
         loss.backward()
 
     avg = prof.key_averages()

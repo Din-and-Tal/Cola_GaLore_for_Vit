@@ -1,15 +1,15 @@
 urgent:
-
+TODO: check best worker count
+TODO: check performance without setseed and worker
 TODO:!!!! clear unused parameters
 TODO: eval each k epochs
 TODO: refactor camel snake all code base and lower-case letters on config file
 TODO: move to tinyimagenet
 TODO: finding good hyperparams for training,scheduler:merge lr params (if needed)
+TODO: fix error for v1_cola: C:\Users\Tal\miniconda3\envs\deep_learning\Lib\site-packages\torch\utils\checkpoint.py:85: UserWarning: None of the inputs have requires_grad=True. Gradients will be None 
 
 mid:
 
-TODO: run two same experience and see that results are same when debug is on
-TODO: pytorch reproduce guide (export CUBLAS_WORKSPACE_CONFIG=:4096:8)
 TODO: add type checking (via python's type checker and ruff linter)
 TODO: find better solution to surpress None errors after checking for None (# type: ignore)
 TODO: profile how much time takes each part

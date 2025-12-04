@@ -61,7 +61,7 @@ def get_data_loaders(cfg):
                 root="./datasets", train=train_split, download=True, transform=transform
             )
         else:
-            raise ValueError(f"Unknown dataset name: {cfg.DATASET_NAME}")
+            raise ValueError(f"Unknown dataset name: {cfg.dataset_name}")
 
     # 1. Create two versions of the full dataset: one with Augmentation, one Clean
     # Load official train and test sets
