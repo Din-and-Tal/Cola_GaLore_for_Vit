@@ -89,19 +89,19 @@ def get_data_loaders(cfg):
     train_indices = indices[:train_size]
     val_indices = indices[train_size : train_size + val_size]
     test_indices = indices[train_size + val_size :]
-    REDUCED_DATA_FRACTION = cfg.debug_data_scale
+    debug_batches = int(len(test_indices) * cfg.debug_data_scale)
     # Reduce data if fullTrain is False
     if not cfg.full_train:
         train_indices = train_indices[
-            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
+            : max(1, debug_batches)
         ]
         val_indices = val_indices[
-            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
+            : max(1, debug_batches)
         ]
         test_indices = test_indices[
-            : max(1, int(len(test_indices) * REDUCED_DATA_FRACTION))
+            : max(1, debug_batches)
         ]
-        print(f"Using reduced data: {cfg.debug_batches} epoches")
+        print(f"Using reduced data: {debug_batches} epoches")
 
     # 4. Create Subsets
     # Train gets Augmented dataset, Val/Test get Clean dataset

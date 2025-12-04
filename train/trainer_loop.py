@@ -1,7 +1,7 @@
+import torch
 import time
 from contextlib import nullcontext
 
-import torch
 from util.model import save_model
 
 

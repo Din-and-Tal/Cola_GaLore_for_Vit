@@ -2,6 +2,7 @@ urgent:
 
 TODO:!!!! clear unused parameters
 TODO: eval each k epochs
+TODO: refactor camel snake all code base and lower-case letters on config file
 
 
 mid:
@@ -12,9 +13,7 @@ TODO: add type checking (via python's type checker and ruff linter)
 TODO: find better solution to surpress None errors after checking for None (# type: ignore)
 TODO: profile how much time takes each part
 TODO: prefetch
-TODO: camel snake all code base and small letters on config file
 TODO: check how torch.cuda.empty_cache() effects training
-
 
 
 low:

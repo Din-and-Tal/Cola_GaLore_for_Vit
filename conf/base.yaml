@@ -3,7 +3,7 @@
    
     full_train: true
     debug_data_scale: 0.1
-
+    PROFILE_MEMORY: false
     size: tiny
 
     vit_presents:
