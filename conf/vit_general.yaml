@@ -4,6 +4,8 @@ MEM_MEASURE: false
 SEED: 42
 NUM_WORKERS: 2 # TODO: check best value
 
+
+limit_train_steps: false
 # ---------------------------
 # Data Settings
 # ---------------------------
@@ -104,11 +106,11 @@ GLORA_PROJ_TYPE: "std"
 # ---------------------------
 # Training Hyperparameters
 # ---------------------------
-NUM_EPOCHS: 5
+NUM_EPOCHS: 10
 BATCH_SIZE: 256
-LEARNING_RATE: 1e-3
+LEARNING_RATE: 1e-5
 WEIGHT_DECAY: 0.05
-WARMUP_EPOCHS: 5
+WARMUP_EPOCHS: 1
 MAX_GRAD_NORM: 1.0
 HIDDEN_DROPOUT_PROB: 0.0
 
@@ -124,6 +126,6 @@ SCHEDULER_GAMMA: 0.5
 
 
 # wandb configuration
-USE_WANDB: false
-WANDB_PROJECT_NAME: "efficient_vit_pretraining"
+USE_WANDB: true
+WANDB_PROJECT_NAME: "vit-cifar100_v2"
 WANDB_TEAM_NAME: "din-alon-technion-israel-institute-of-technology"
