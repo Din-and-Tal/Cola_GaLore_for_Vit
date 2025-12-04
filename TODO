@@ -6,3 +6,6 @@ TODO: add type checking (via python's type checker and ruff linter)
 TODO: fix the bug in AMP (exploding loss)
 TODO: find better solution to surpress None errors after checking for None (# type: ignore)
 TODO: profile how much time takes each part
+TODO: pass whole scheduler
+TODO: prefetch
+TODO: clear debug and unused parameters
