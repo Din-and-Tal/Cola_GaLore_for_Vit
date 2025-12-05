@@ -8,48 +8,13 @@ debug_data_scale: 0.001
 size: tiny
 profile_memory: false
 num_workers: 4
-
-vit_presents:
-  tiny:
-    hidden_size: 192
-    num_hidden_layers: 12
-    num_attention_heads: 3
-    intermediate_size: 768
-
-  small:
-    hidden_size: 384
-    num_hidden_layers: 12
-    num_attention_heads: 6
-    intermediate_size: 1536
-
-  base:
-    hidden_size: 768
-    num_hidden_layers: 12
-    num_attention_heads: 12
-    intermediate_size: 3072
-
-  large:
-    hidden_size: 1024
-    num_hidden_layers: 24
-    num_attention_heads: 16
-    intermediate_size: 4096
-
-  huge:
-    hidden_size: 1280
-    num_hidden_layers: 32
-    num_attention_heads: 16
-    intermediate_size: 5120
-    total_params: 632_000_000
-
-hidden_size: ${vit_presents.${size}.hidden_size}
-num_hidden_layers: ${vit_presents.${size}.num_hidden_layers}
-num_attention_heads: ${vit_presents.${size}.num_attention_heads}
-intermediate_size: ${vit_presents.${size}.intermediate_size}
+use_amp: true
+compile_model: true
 
 seed: 42
 
 dataset_name: "tiny_imagenet"
-num_classes: 200  # Change to 100 for CIFAR100
+num_classes: 200
 
 base_output_dir: "./saved_models"
 save_model: false
@@ -96,3 +61,40 @@ wandb_project_name: "tiny-imagenet"
 wandb_team_name: "din-alon-technion-israel-institute-of-technology"
 
 config_name: ${hydra:job.config_name}
+
+vit_presents:
+  tiny:
+    hidden_size: 192
+    num_hidden_layers: 12
+    num_attention_heads: 3
+    intermediate_size: 768
+
+  small:
+    hidden_size: 384
+    num_hidden_layers: 12
+    num_attention_heads: 6
+    intermediate_size: 1536
+
+  base:
+    hidden_size: 768
+    num_hidden_layers: 12
+    num_attention_heads: 12
+    intermediate_size: 3072
+
+  large:
+    hidden_size: 1024
+    num_hidden_layers: 24
+    num_attention_heads: 16
+    intermediate_size: 4096
+
+  huge:
+    hidden_size: 1280
+    num_hidden_layers: 32
+    num_attention_heads: 16
+    intermediate_size: 5120
+    total_params: 632_000_000
+
+hidden_size: ${vit_presents.${size}.hidden_size}
+num_hidden_layers: ${vit_presents.${size}.num_hidden_layers}
+num_attention_heads: ${vit_presents.${size}.num_attention_heads}
+intermediate_size: ${vit_presents.${size}.intermediate_size}

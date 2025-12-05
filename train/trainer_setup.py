@@ -1,5 +1,6 @@
 import os
 import torch
+from torch.cuda.amp import GradScaler
 from types import SimpleNamespace
 
 import wandb
@@ -29,6 +30,7 @@ class Trainer:
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.scaler = GradScaler(enabled=getattr(cfg, "use_amp", False) and self.device == "cuda")
 
         set_seed(cfg.seed)
 
@@ -64,6 +66,9 @@ class Trainer:
                 device=self.device,
                 optimizer_params=self.optimizer_params,
             )
+
+        if getattr(cfg, "compile_model", False):
+            self.model = torch.compile(self.model)
 
         # 5. Wandb Initialization
         # TODO: capture important data

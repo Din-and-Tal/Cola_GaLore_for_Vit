@@ -94,6 +94,8 @@ def epoch_step(trainer, loader, is_training, full_train=True):
     optimizer = trainer.optimizer
     loss_fn = trainer.loss_func
     device = trainer.device
+    scaler = trainer.scaler
+    cfg = trainer.cfg
 
     total_loss, correct, total = 0.0, 0, 0
     batch_idx = 0
@@ -106,7 +108,8 @@ def epoch_step(trainer, loader, is_training, full_train=True):
         if max_batches is not None and batch_idx >= max_batches:
             break
 
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs= inputs.to(device, non_blocking=True)
+        targets = targets.to(device, non_blocking=True)
 
         if is_training:
             # ----- Mixup / CutMix -----
@@ -116,17 +119,32 @@ def epoch_step(trainer, loader, is_training, full_train=True):
 
             optimizer.zero_grad()
 
-            outputs = model(pixel_values=inputs_mixed).logits
+            # ----- AMP forward -----
+            with torch.cuda.amp.autocast(enabled=scaler.is_enabled()):
+                outputs = model(pixel_values=inputs_mixed).logits
+                if used_mix:
+                    loss = lam * loss_fn(outputs, targets_a) + (1.0 - lam) * loss_fn(
+                        outputs, targets_b
+                    )
+                else:
+                    loss = loss_fn(outputs, targets)
 
-            if used_mix:
-                loss = lam * loss_fn(outputs, targets_a) + (1 - lam) * loss_fn(
-                    outputs, targets_b
-                )
+            # ----- AMP backward + step -----
+            if scaler.is_enabled():
+                scaler.scale(loss).backward()
+
+                # optional: gradient clipping
+                if getattr(cfg, "max_grad_norm", 0.0) and cfg.max_grad_norm > 0:
+                    scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
+
+                scaler.step(optimizer)
+                scaler.update()
             else:
-                loss = loss_fn(outputs, targets)
-
-            loss.backward()
-            optimizer.step()
+                loss.backward()
+                if getattr(cfg, "max_grad_norm", 0.0) and cfg.max_grad_norm > 0:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
+                optimizer.step()
 
         else:
             with torch.no_grad():

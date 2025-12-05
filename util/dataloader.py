@@ -105,6 +105,7 @@ def get_data_loaders(cfg):
     image_size = getattr(cfg, "image_size", 64)
     seed = getattr(cfg, "seed", 42)
     pin_memory = getattr(cfg, "pin_memory", True)
+    persistent_workers = getattr(cfg, "persistent_workers", True)
 
     mean = (0.4802, 0.4481, 0.3975)
     std = (0.2770, 0.2691, 0.2821)
@@ -151,11 +152,11 @@ def get_data_loaders(cfg):
 
     # DataLoaders
     train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True,
-                              num_workers=cfg.num_workers, pin_memory=pin_memory, drop_last=True)
+                              num_workers=cfg.num_workers, pin_memory=pin_memory, persistent_workers=persistent_workers, drop_last=True)
     val_loader = DataLoader(val_ds, batch_size=cfg.batch_size, shuffle=False,
-                            num_workers=cfg.num_workers, pin_memory=pin_memory)
+                            num_workers=cfg.num_workers, pin_memory=pin_memory, persistent_workers=persistent_workers)
     test_loader = DataLoader(test_ds, batch_size=cfg.batch_size, shuffle=False,
-                             num_workers=cfg.num_workers, pin_memory=pin_memory)
+                             num_workers=cfg.num_workers, pin_memory=pin_memory, persistent_workers=persistent_workers)
     print(
             f"Samples -> Train: {len(train_ds)}, Val: {len(val_ds)}, Test: {len(test_ds)}, Classes: {len(base_train.class_to_idx)}"
         )
