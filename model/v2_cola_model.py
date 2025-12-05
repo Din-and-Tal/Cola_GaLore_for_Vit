@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 from model.v2_cola_layer import ColaLinear
-# TODO: check if recursive is needed
 
 def convert_vit_to_cola_m(model, rank_ratio=0.25, verbose=False):
     """

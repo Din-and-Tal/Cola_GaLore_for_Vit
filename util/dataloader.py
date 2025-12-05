@@ -4,7 +4,6 @@ import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, ConcatDataset, Subset
 
-# TODO: go over
 
 # Mean and Std for normalization
 STATS = {

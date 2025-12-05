@@ -8,6 +8,7 @@ debug_data_scale: 0.001
 size: tiny
 profile_memory: false
 
+
 vit_presents:
   tiny:
     hidden_size: 192
@@ -46,7 +47,7 @@ num_attention_heads: ${vit_presents.${size}.num_attention_heads}
 intermediate_size: ${vit_presents.${size}.intermediate_size}
 
 seed: 42
-num_workers: 2 # TODO: check best value
+num_workers: 4
 
 dataset_name: "cifar100"
 num_classes: 100  # Change to 100 for CIFAR100

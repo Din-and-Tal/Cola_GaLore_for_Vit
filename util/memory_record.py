@@ -62,6 +62,8 @@ def profile_memory(
                 wandb_run.log({"memory/profiler_html": wandb.Html(html_str)})
             except Exception as e:
                 print(f"[Profiler] WARNING: failed to log HTML to W&B: {e}")
+        
+    exit(0)
 
 
 def _make_run_dir(run_name: str, base_path: str | None = None) -> tuple[str, str]:
@@ -136,15 +138,19 @@ def profile_memory_once(
     inputs, targets = inputs.to(device), targets.to(device)
 
     print(f"\n[Profiler] Running memory profiling (Method B) for '{run_name}'...")
+    
+    total_iters = (1 + 1 + num_iters) * 2 # Stop after schedule (wait+warmup+active) * repeat
+
+    
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-        schedule=torch.profiler.schedule(wait=0, warmup=0, active=num_iters, repeat=1),
+        schedule=torch.profiler.schedule(wait=1, warmup=1, active=num_iters, repeat=2),
         record_shapes=True,
         profile_memory=True,
         with_stack=True,
         on_trace_ready=lambda prof: trace_handler(prof, base_dir, file_prefix),
     ) as prof:
-        for _ in range(num_iters):
+        for _ in range(total_iters):
             prof.step()
             with record_function("forward"):
                 outputs = model(pixel_values=inputs).logits

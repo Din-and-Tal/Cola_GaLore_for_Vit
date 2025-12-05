@@ -14,9 +14,8 @@ config_names=(
 
 for config in "${config_names[@]}"; do
     echo "Running with config: $config"
-    python main/main.py --config-name $config full_train=false size=tiny use_wandb=false
+    python main/main.py --config-name $config full_train=false use_wandb=false
     echo "-----------------------------------"
-    sleep 5
 done
 
 echo "All benchmarks completed!"
