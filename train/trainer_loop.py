@@ -12,25 +12,23 @@ def train_loop(trainer):
     best_acc = 0.0
 
     # Limit training when full_train is False
-    num_epochs = cfg.num_epochs if cfg.full_train else 1
+    num_epochs = cfg.num_epochs if cfg.full_train else 3
     run_eval = cfg.full_train
 
     print("\nStarting training...")
+    print(f"Training batches: {len(trainer.loaders.train)}")
+    if run_eval:
+        print(f"Validation batches: {len(trainer.loaders.val)}")
+        print(f"Test batches: {len(trainer.loaders.test)}")
     start_time = time.time()
 
     for epoch in range(num_epochs):
         epoch_start = time.time()
-        print(
-            f"\n[Epoch {epoch}/{num_epochs}] Training on {len(trainer.loaders.train)} batches..."
-        )
         train_loss, train_acc = epoch_step(
             trainer, trainer.loaders.train, True, cfg.full_train
         )
 
         if run_eval:
-            print(
-                f"[Epoch {epoch}/{num_epochs}] Validating on {len(trainer.loaders.val)} batches..."
-            )
             val_loss, val_acc = epoch_step(
                 trainer, trainer.loaders.val, False, cfg.full_train
             )
@@ -77,7 +75,6 @@ def train_loop(trainer):
 
     # Final test
     if run_eval:
-        print(f"\n[Final] Testing on {len(trainer.loaders.test)} batches...")
         _, test_acc = epoch_step(trainer, trainer.loaders.test, False, cfg.full_train)
     else:
         test_acc = 0.0
