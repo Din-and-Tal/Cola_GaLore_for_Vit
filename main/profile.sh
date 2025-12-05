@@ -14,7 +14,7 @@ config_names=(
 
 for config in "${config_names[@]}"; do
     echo "Running with config: $config"
-    python main/main.py --config-name $config full_train=false use_wandb=false profile_memory=true debug_data_scale=0.1
+    python main/main.py --config-name $config use_wandb=false profile_memory=true
     echo "-----------------------------------"
 done
 

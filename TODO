@@ -1,39 +1,6 @@
 05/12:
 
-main goal: finding good hyperparameters and regulizing (weight decay, dropout, label smoothing, normalization, early stopping?, augmention, noise) 
-enough to get good performance for imagenet task
-(important: learning from good training repos)
-
 -give gemini perimissions for repo + make sure to always fetch changes in repo-din
--using task manager(todoist)
-
--searching good hyperparameters and regulizing model:
-    -learning about scheduler parameters + searching for good hyperparameters
-    -checking when to step (each epoch vs each k batches vs each batch)
--implement new data loader + move to imagenet
-
--eval each k epochs
-
--building good testing script
-
--improve training preformance with profiler(https://docs.pytorch.org/tutorials/recipes/recipes/tuning_guide.html)
-    
-    dont use transforms (use instead pre-processing technique like opencv)
-    be aware of checkpoints
-    ee_deep course tutorial
-    memory loading battleneck (check best worker count)
-    prefetch 
-    checking how much time takes each part
-    check performance without setseed and worker
-    wandb sync
-
-- clear unused parameters (merge lr params (if needed)) - together
-
-
-
-
-urgent:
-TODO: fix error for v1_cola: C:\Users\Tal\miniconda3\envs\deep_learning\Lib\site-packages\torch\utils\checkpoint.py:85: UserWarning: None of the inputs have requires_grad=True. Gradients will be None 
 
 mid:
 
@@ -44,3 +11,6 @@ low:
 TODO: add AMP
 TODO: pass whole scheduler
 TODO: find better solution to surpress None errors after checking for None (# type: ignore)
+-eval each k epochs - 
+-building good training script - tal
+- clear unused parameters (merge lr params (if needed)) - together

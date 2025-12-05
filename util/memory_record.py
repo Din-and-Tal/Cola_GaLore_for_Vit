@@ -1,157 +1,117 @@
 import os
 import torch
-from torch.profiler import profile, ProfilerActivity, record_function
+import wandb
 from datetime import datetime
-
-import wandb  # <--- NEW
-
+from pathlib import Path
+from torch.profiler import profile, ProfilerActivity, record_function, schedule
 from util.simple_memory_logger import measure_memory_breakdown
 
-TIME_FORMAT_STR = "%b_%d_%H_%M"
+TIME_FMT = "%b_%d_%H_%M"
 
+def _setup_dir(run_name, base_path):
+    """Helper to create output directories."""
+    path = Path(base_path) / "memory_profiles" if base_path else Path.cwd().parent / "memory_profiles"
+    base_dir = path / run_name
+    base_dir.mkdir(parents=True, exist_ok=True)
+    return str(base_dir), datetime.now().strftime(TIME_FMT)
 
-def profile_memory(
-    model,
-    optimizer,
-    loss_fn,
-    loader,
-    num_iters,
-    device,
-    run_name,
-    wandb_run=None,       # <--- NEW: optional W&B run
-):
+def trace_handler(prof, output_dir, file_prefix):
     """
-    Wrapper to run both memory profiling methods (HTML profiler + simple logger).
-
-    If `wandb_run` is provided:
-      - logs the profiler HTML as a W&B Html object
-      - logs the simple numeric breakdown as scalar metrics
+    Exports traces and PRINTS A BOTTLENECK REPORT.
+    Now generates both CPU and CUDA sorted tables.
     """
+    # 1. Export Standard Traces
+    path_base = os.path.join(output_dir, file_prefix)
+    prof.export_chrome_trace(f"{path_base}.json.gz")
+    prof.export_memory_timeline(f"{path_base}.html", device="cuda:0")
 
-    # 1) Profiler HTML
-    html_path = profile_memory_once(
-        model,
-        optimizer,
-        loss_fn,
-        loader,
-        num_iters=num_iters,
-        device=device,
-        run_name=run_name,
-    )
+    # 2. Generate Bottleneck Report
+    report_path = f"{path_base}_bottlenecks.txt"
+    
+    # Get stats
+    avgs = prof.key_averages()
+    cpu_stats = avgs.table(sort_by="cpu_time_total", row_limit=20)
+    
+    # Prepare output string
+    output_str = "=== Top Functions by CPU Time (Data Loading & Overhead) ===\n"
+    output_str += cpu_stats + "\n\n"
+    
+    if torch.cuda.is_available():
+        cuda_stats = avgs.table(sort_by="cuda_time_total", row_limit=20)
+        output_str += "=== Top Functions by CUDA Time (GPU Compute) ===\n"
+        output_str += cuda_stats + "\n"
 
-    # 2) Simple numeric breakdown (params / optimizer / activations / grads)
-    mem_stats = measure_memory_breakdown(
-        model=model,
-        optimizer=optimizer,
-        loss_fn=loss_fn,
-        loader=loader,
-        device=device,
-    )
+    # Save to file
+    with open(report_path, "w") as f:
+        f.write(output_str)
 
-    # 3) Optional: log to W&B
-    if wandb_run is not None:
-        # log numeric stats
-        if mem_stats is not None:
+    print(f"\n[Profiler] Report saved to {report_path}")
+    print(output_str)
+
+def profile_memory(model, optimizer, loss_fn, loader, num_iters, device, run_name, wandb_run=None):
+    """
+    Wrapper for HTML profiling + Simple Memory Logging + WandB logging.
+    """
+    # 1. Run Profiler (Generates HTML & Bottleneck Report)
+    html_path = profile_memory_once(model, optimizer, loss_fn, loader, num_iters, device, run_name)
+
+    # 2. Run Simple Breakdown
+    mem_stats = measure_memory_breakdown(model, optimizer, loss_fn, loader, device)
+
+    # 3. Log to W&B
+    if wandb_run:
+        if mem_stats:
             wandb_run.log({f"memory/{k}": v for k, v in mem_stats.items()})
-
-        # log HTML profiler as a W&B Html panel
-        if html_path is not None and os.path.exists(html_path):
-            try:
-                with open(html_path, "r") as f:
-                    html_str = f.read()
-                wandb_run.log({"memory/profiler_html": wandb.Html(html_str)})
-            except Exception as e:
-                print(f"[Profiler] WARNING: failed to log HTML to W&B: {e}")
         
+        if html_path and os.path.exists(html_path):
+            try:
+                wandb_run.log({"memory/profiler_html": wandb.Html(open(html_path).read())})
+            except Exception as e:
+                print(f"[Profiler] WandB Log Error: {e}")
+
     exit(0)
 
-
-def _make_run_dir(run_name: str, base_path: str | None = None) -> tuple[str, str]:
+def profile_memory_once(model, optimizer, loss_fn, loader, num_iters=5, device="cuda", run_name="default_run", base_path=None):
     """
-    Create directory for a run and return (base_dir, file_prefix).
-    base_dir:  <base_path>/memory_profiles/<run_name>
-    file_prefix: <timestamp>
+    Runs torch.profiler with a schedule to generate timelines and bottleneck stats.
+    Includes data loading time in the profile.
     """
-    if base_path is None:
-        # default: one level above current cwd, in "memory_profiles"
-        base_path = os.path.join(os.path.dirname(os.getcwd()), "memory_profiles")
-    else:
-        base_path = os.path.join(base_path, "memory_profiles")
-
-    base_dir = os.path.join(base_path, run_name)
-    os.makedirs(base_dir, exist_ok=True)
-
-    timestamp = datetime.now().strftime(TIME_FORMAT_STR)
-    file_prefix = f"{timestamp}"
-
-    return base_dir, file_prefix
-
-
-# =========================
-# Method B: Profiler HTML
-# =========================
-
-def trace_handler(prof: torch.profiler.profile, output_dir: str, file_prefix: str):
-    """Handles trace export (JSON + HTML memory timeline)."""
-    json_path = os.path.join(output_dir, f"{file_prefix}.json.gz")
-    html_path = os.path.join(output_dir, f"{file_prefix}.html")
-
-    prof.export_chrome_trace(json_path)
-    prof.export_memory_timeline(html_path, device="cuda:0")
-
-    print(f"[Profiler] Trace saved:\n  {json_path}\n  {html_path}\n")
-
-
-def profile_memory_once(
-    model,
-    optimizer,
-    loss_fn,
-    loader,
-    num_iters: int = 5,
-    device: str = "cuda",
-    run_name: str = "default_run",
-    base_path: str | None = None,
-):
-    """
-    Method B: run a few dummy iterations with torch.profiler to generate
-    Chrome trace + HTML memory timeline for the current run.
-
-    Returns:
-        html_path (str or None): path to the generated HTML file.
-    """
-    if not torch.cuda.is_available():
-        print("CUDA not available, skipping memory profiling (Method B).")
+    if not torch.cuda.is_available() and device == "cuda":
+        print("CUDA missing. Skipping profile_memory_once.")
         return None
 
-    base_dir, file_prefix = _make_run_dir(run_name, base_path)
-
-    model.train()
-    device = torch.device(device)
-
-    # Take one batch
-    try:
-        inputs, targets = next(iter(loader))
-    except StopIteration:
-        print("Loader empty, cannot profile (Method B).")
-        return None
-
-    inputs, targets = inputs.to(device), targets.to(device)
-
-    print(f"\n[Profiler] Running memory profiling (Method B) for '{run_name}'...")
+    out_dir, prefix = _setup_dir(run_name, base_path)
+    model.train().to(device)
     
-    total_iters = (1 + 1 + num_iters) * 2 # Stop after schedule (wait+warmup+active) * repeat
+    print(f"\n[Profiler] Profiling '{run_name}' (Warmup+Active cycles)...")
 
+    # Iterator wrapper to handle recycling if loader is short
+    loader_iter = iter(loader)
+
+    # Schedule: Wait 1 -> Warmup 1 -> Active num_iters (Repeat 2x)
+    sched = schedule(wait=1, warmup=1, active=num_iters, repeat=2)
     
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-        schedule=torch.profiler.schedule(wait=1, warmup=1, active=num_iters, repeat=2),
+        schedule=sched,
         record_shapes=True,
         profile_memory=True,
         with_stack=True,
-        on_trace_ready=lambda prof: trace_handler(prof, base_dir, file_prefix),
+        on_trace_ready=lambda p: trace_handler(p, out_dir, prefix)
     ) as prof:
-        for _ in range(total_iters):
+        # Run enough steps to cover the schedule
+        for _ in range((1 + 1 + num_iters) * 2):
             prof.step()
+            
+            # Profile Data Loading + Host-to-Device Transfer
+            with record_function("data_loading"):
+                try:
+                    inputs, targets = next(loader_iter)
+                except StopIteration:
+                    loader_iter = iter(loader)
+                    inputs, targets = next(loader_iter)
+                inputs, targets = inputs.to(device), targets.to(device)
+
             with record_function("forward"):
                 outputs = model(pixel_values=inputs).logits
             with record_function("backward"):
@@ -161,70 +121,32 @@ def profile_memory_once(
                 optimizer.step()
                 optimizer.zero_grad(set_to_none=True)
 
-    html_path = os.path.join(base_dir, f"{file_prefix}.html")
-    print(f"[Profiler] Finished Method B. Files saved under: {base_dir}\n")
+    html_path = os.path.join(out_dir, f"{prefix}.html")
+    return html_path if os.path.exists(html_path) else None
 
-    if not os.path.exists(html_path):
-        print(f"[Profiler] WARNING: expected HTML file not found at {html_path}")
-        return None
-
-    return html_path
-
-
-# =========================
-# Method A: Snapshot pickle (unused for now)
-# =========================
-
-def memory_snapshot_once(
-    model,
-    optimizer,
-    loss_fn,
-    loader,
-    num_iters: int = 5,
-    device: str = "cuda",
-    run_name: str = "default_run",
-    base_path: str | None = None,
-):
+def memory_snapshot_once(model, optimizer, loss_fn, loader, num_iters=5, device="cuda", run_name="default_run", base_path=None):
     """
-    Method A: use torch.cuda.memory._record_memory_history to record
-    a low-level memory snapshot and dump it as a .pickle file.
-
-    (Currently not called — left here in case you want to revive it.)
+    (Unused) Method A: Records low-level memory history snapshot.
     """
-    if not torch.cuda.is_available():
-        print("CUDA not available, skipping memory snapshot (Method A).")
-        return
+    if not torch.cuda.is_available(): return
 
-    base_dir, file_prefix = _make_run_dir(run_name, base_path)
-    snapshot_path = os.path.join(base_dir, f"{file_prefix}_snapshot.pickle")
-
-    model.train()
-    device = torch.device(device)
-
-    # Take one batch
+    out_dir, prefix = _setup_dir(run_name, base_path)
+    save_path = os.path.join(out_dir, f"{prefix}_snapshot.pickle")
+    
+    model.train().to(device)
     try:
         inputs, targets = next(iter(loader))
-    except StopIteration:
-        print("Loader empty, cannot profile (Method A).")
-        return
+        inputs, targets = inputs.to(device), targets.to(device)
+    except: return
 
-    inputs, targets = inputs.to(device), targets.to(device)
-
-    print(f"\n[Snapshot] Recording GPU memory history (Method A) for '{run_name}'...")
+    print(f"[Snapshot] Recording {num_iters} iters...")
     try:
         torch.cuda.memory._record_memory_history(enabled=True)
-
         for _ in range(num_iters):
             optimizer.zero_grad(set_to_none=True)
-            outputs = model(pixel_values=inputs).logits
-            loss = loss_fn(outputs, targets)
-            loss.backward()
+            loss_fn(model(pixel_values=inputs).logits, targets).backward()
             optimizer.step()
-
-        torch.cuda.memory._dump_snapshot(snapshot_path)
-        print(f"[Snapshot] Dumped memory snapshot to: {snapshot_path}")
-
+        torch.cuda.memory._dump_snapshot(save_path)
+        print(f"[Snapshot] Saved to {save_path}")
     finally:
         torch.cuda.memory._record_memory_history(enabled=False)
-
-    print(f"[Snapshot] Finished Method A. Files saved under: {base_dir}\n")
