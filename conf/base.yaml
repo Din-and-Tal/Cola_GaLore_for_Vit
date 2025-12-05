@@ -7,7 +7,7 @@ full_train: true
 debug_data_scale: 0.001
 size: tiny
 profile_memory: false
-num_workers: 4
+num_workers: 0
 
 vit_presents:
   tiny:
