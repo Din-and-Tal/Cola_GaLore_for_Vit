@@ -109,13 +109,21 @@ def get_data_loaders(cfg):
     mean = (0.4802, 0.4481, 0.3975)
     std = (0.2770, 0.2691, 0.2821)
 
-    # ✅ Train: augmentation; Val/Test: deterministic only
     train_tf = transforms.Compose([
-        transforms.Resize((image_size, image_size)),
+        # more diverse crops (zoom in/out, slight aspect changes)
+        transforms.RandomResizedCrop(
+            image_size, scale=(0.6, 1.0), ratio=(0.75, 1.33)
+        ),
         transforms.RandomHorizontalFlip(),
-        transforms.RandomCrop(image_size, padding=4),
+
+        # RandAugment: extra color / geometric jitter
+        transforms.RandAugment(num_ops=2, magnitude=9),
+
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
+
+        # Random erasing on some images (very good for ViT)
+        transforms.RandomErasing(p=0.1, scale=(0.02, 0.33), ratio=(0.3, 3.3)),
     ])
 
     eval_tf = transforms.Compose([

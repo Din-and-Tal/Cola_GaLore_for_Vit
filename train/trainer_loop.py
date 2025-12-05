@@ -2,6 +2,7 @@ import torch
 import time
 from contextlib import nullcontext
 
+from train.trainer_utils import apply_mixup_cutmix
 from util.model import save_model
 
 
@@ -108,12 +109,25 @@ def epoch_step(trainer, loader, is_training, full_train=True):
         inputs, targets = inputs.to(device), targets.to(device)
 
         if is_training:
-            outputs = model(pixel_values=inputs).logits
-            loss = loss_fn(outputs, targets)
+            # ----- Mixup / CutMix -----
+            inputs_mixed, targets_a, targets_b, lam, used_mix = apply_mixup_cutmix(
+                inputs, targets, trainer.cfg, device
+            )
 
             optimizer.zero_grad()
+
+            outputs = model(pixel_values=inputs_mixed).logits
+
+            if used_mix:
+                loss = lam * loss_fn(outputs, targets_a) + (1 - lam) * loss_fn(
+                    outputs, targets_b
+                )
+            else:
+                loss = loss_fn(outputs, targets)
+
             loss.backward()
             optimizer.step()
+
         else:
             with torch.no_grad():
                 outputs = model(pixel_values=inputs).logits
