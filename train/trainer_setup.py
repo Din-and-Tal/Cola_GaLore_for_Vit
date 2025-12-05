@@ -41,7 +41,7 @@ class Trainer:
 
         # 4. Optimizer & Scheduler
         self.optimizer, self.optimizer_params = get_optimizer(self.model, cfg)
-        self.loss_func = torch.nn.CrossEntropyLoss()
+        self.loss_func = torch.nn.CrossEntropyLoss(label_smoothing=cfg.label_smoothing)
 
         # Cosine Annealing Scheduler
         self.scheduler = CosineAnnealingWarmupRestarts(
