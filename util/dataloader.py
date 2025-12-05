@@ -148,5 +148,10 @@ def get_data_loaders(cfg):
                             num_workers=cfg.num_workers, pin_memory=pin_memory)
     test_loader = DataLoader(test_ds, batch_size=cfg.batch_size, shuffle=False,
                              num_workers=cfg.num_workers, pin_memory=pin_memory)
-
+    print(
+            f"Samples -> Train: {len(train_ds)}, Val: {len(val_ds)}, Test: {len(test_ds)}, Classes: {len(base_train.class_to_idx)}"
+        )
+    print(
+            f"Batches -> Train: {len(train_loader)}, Val: {len(val_loader)}, Test: {len(test_loader)}"
+        )
     return train_loader, val_loader, test_loader

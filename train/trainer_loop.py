@@ -10,14 +10,32 @@ def train_loop(trainer):
     cfg = trainer.cfg
     best_acc = 0.0
 
+    # Limit training when full_train is False
+    num_epochs = cfg.num_epochs if cfg.full_train else 1
+    run_eval = cfg.full_train
+
     print("\nStarting training...")
     start_time = time.time()
 
-    for epoch in range(cfg.num_epochs):
+    for epoch in range(num_epochs):
         epoch_start = time.time()
-        train_loss, train_acc = epoch_step(trainer, trainer.loaders.train, True)
-        val_loss, val_acc = epoch_step(trainer, trainer.loaders.val, False)
-        best_acc = val_acc if val_acc > best_acc else best_acc
+        print(
+            f"\n[Epoch {epoch}/{num_epochs}] Training on {len(trainer.loaders.train)} batches..."
+        )
+        train_loss, train_acc = epoch_step(
+            trainer, trainer.loaders.train, True, cfg.full_train
+        )
+
+        if run_eval:
+            print(
+                f"[Epoch {epoch}/{num_epochs}] Validating on {len(trainer.loaders.val)} batches..."
+            )
+            val_loss, val_acc = epoch_step(
+                trainer, trainer.loaders.val, False, cfg.full_train
+            )
+            best_acc = val_acc if val_acc > best_acc else best_acc
+        else:
+            val_loss, val_acc = 0.0, 0.0
 
         trainer.scheduler.step()
         lr = trainer.optimizer.param_groups[0]["lr"]
@@ -57,7 +75,11 @@ def train_loop(trainer):
             )
 
     # Final test
-    _, test_acc = epoch_step(trainer, trainer.loaders.test, False)
+    if run_eval:
+        print(f"\n[Final] Testing on {len(trainer.loaders.test)} batches...")
+        _, test_acc = epoch_step(trainer, trainer.loaders.test, False, cfg.full_train)
+    else:
+        test_acc = 0.0
     print(f"Training finished in {(time.time() - start_time)/60:.2f} minutes.")
     print(f"Best Val Acc: {best_acc:.2f}% | Test Acc: {test_acc:.2f}%")
 
@@ -66,18 +88,22 @@ def train_loop(trainer):
         trainer.wandb.finish()
 
 
-def epoch_step(trainer, loader, is_training):
+def epoch_step(trainer, loader, is_training, full_train=True):
     model = trainer.model
     optimizer = trainer.optimizer
     loss_fn = trainer.loss_func
     device = trainer.device
 
     total_loss, correct, total = 0.0, 0, 0
+    batch_idx = 0
+    max_batches = None if full_train else 4
 
     ctx = nullcontext() if is_training else torch.no_grad()
     model.train() if is_training else model.eval()
 
     for batch_idx, (inputs, targets) in enumerate(loader):
+        if max_batches is not None and batch_idx >= max_batches:
+            break
 
         inputs, targets = inputs.to(device), targets.to(device)
 
