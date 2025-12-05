@@ -48,12 +48,8 @@ intermediate_size: ${vit_presents.${size}.intermediate_size}
 
 seed: 42
 
-dataset_name: "cifar100"
-num_classes: 100  # Change to 100 for CIFAR100
-
-train_ratio: 0.8
-val_ratio: 0.1
-test_ratio: 0.1
+dataset_name: "tiny_imagenet"
+num_classes: 200  # Change to 100 for CIFAR100
 
 base_output_dir: "./saved_models"
 save_model: false

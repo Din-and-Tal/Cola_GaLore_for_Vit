@@ -1,138 +1,152 @@
-import random
-import numpy
+import os
+import zipfile
+import urllib.request
+from pathlib import Path
+
 import torch
+from torch.utils.data import DataLoader, Dataset, Subset, random_split
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader, ConcatDataset, Subset
+from PIL import Image
 
 
-# Mean and Std for normalization
-STATS = {
-    "cifar10": ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    "cifar100": ((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
-    "imagefolder": ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),  # ImageNet standard
-}
+# =========================
+# CONSTANTS
+# =========================
+PROJECT_BASE = Path(__file__).resolve().parents[1]
+DATASET_DIR = PROJECT_BASE / "datasets"
+TINY_IMAGENET_URL = "http://cs231n.stanford.edu/tiny-imagenet-200.zip"
+TINY_IMAGENET_DIR = DATASET_DIR / "tiny-imagenet-200"
 
 
-def seed_worker(worker_id):
-    """Worker init function for reproducibility - must be at module level for pickling on Windows."""
-    worker_seed = torch.initial_seed() % 2**32
-    numpy.random.seed(worker_seed)
-    random.seed(worker_seed)
+# =========================
+# HELPERS
+# =========================
+def _ensure_tiny_imagenet() -> Path:
+    """Ensure tiny-imagenet-200 exists under datasets/. Download if needed."""
+    if TINY_IMAGENET_DIR.exists():
+        return TINY_IMAGENET_DIR
+
+    DATASET_DIR.mkdir(parents=True, exist_ok=True)
+    zip_path = DATASET_DIR / "tiny-imagenet-200.zip"
+
+    print(f"[TinyImageNet] Downloading to {zip_path} ...")
+    urllib.request.urlretrieve(TINY_IMAGENET_URL, zip_path)
+
+    print(f"[TinyImageNet] Unzipping ...")
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        zf.extractall(DATASET_DIR)
+
+    zip_path.unlink(missing_ok=True)
+    return TINY_IMAGENET_DIR
 
 
+class TinyImageNetVal(Dataset):
+    """Use tiny-imagenet-200/val as test set."""
+    def __init__(self, root, class_to_idx, transform=None):
+        val_root = os.path.join(root, "val")
+        images_dir = os.path.join(val_root, "images")
+        ann_path = os.path.join(val_root, "val_annotations.txt")
+
+        self.samples = []
+        self.transform = transform
+
+        with open(ann_path, "r") as f:
+            for line in f:
+                fname, wnid, *_ = line.strip().split()
+                if wnid not in class_to_idx:
+                    continue
+                label = class_to_idx[wnid]
+                path = os.path.join(images_dir, fname)
+                self.samples.append((path, label))
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        path, target = self.samples[idx]
+        img = Image.open(path).convert("RGB")
+        if self.transform:
+            img = self.transform(img)
+        return img, target
+
+
+class TransformSubset(Dataset):
+    """Subset wrapper that applies its own transform (so val never sees train_tf)."""
+    def __init__(self, base_dataset, indices, transform=None):
+        self.base_dataset = base_dataset
+        self.indices = indices
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.indices)
+
+    def __getitem__(self, i):
+        idx = self.indices[i]
+        img, target = self.base_dataset[idx]  # base has transform=None -> PIL
+        if self.transform:
+            img = self.transform(img)
+        return img, target
+
+
+# =========================
+# MAIN
+# =========================
 def get_data_loaders(cfg):
     """
-    Returns training, validation and test dataloaders based on config.
-    Splits the combined dataset according to TRAIN_RATIO, VAL_RATIO, TEST_RATIO.
-    If fullTrain is False, only a fraction of the data is used.
+    Tiny ImageNet only.
+    Raises if cfg.dataset_name != 'tiny_imagenet'.
+    Uses cfg.seed for reproducibility.
     """
-    print(f"Loading dataset: {cfg.dataset_name}...")
+    if getattr(cfg, "dataset_name", "").lower() != "tiny_imagenet":
+        raise ValueError("get_data_loaders only supports dataset_name='tiny_imagenet'")
 
-    # Fraction of data to use when fullTrain is False
+    root = _ensure_tiny_imagenet()
 
-    dataset_name = cfg.dataset_name.lower()
-    mean, std = STATS.get(dataset_name, STATS["imagefolder"])
+    image_size = getattr(cfg, "image_size", 64)
+    seed = getattr(cfg, "seed", 42)
+    pin_memory = getattr(cfg, "pin_memory", True)
 
-    # Standard ViT transforms
-    common_transforms = [
-        transforms.Resize((cfg.image_size, cfg.image_size)),
+    mean = (0.4802, 0.4481, 0.3975)
+    std = (0.2770, 0.2691, 0.2821)
+
+    # ✅ Train: augmentation; Val/Test: deterministic only
+    train_tf = transforms.Compose([
+        transforms.Resize((image_size, image_size)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(image_size, padding=4),
         transforms.ToTensor(),
-        transforms.Normalize(mean=mean, std=std),
-    ]
+        transforms.Normalize(mean, std),
+    ])
 
-    train_transform = transforms.Compose(
-        [
-            # transforms.RandomHorizontalFlip(), # Optional augmentation
-            *common_transforms
-        ]
-    )
+    eval_tf = transforms.Compose([
+        transforms.Resize((image_size, image_size)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+    ])
 
-    val_transform = transforms.Compose([*common_transforms])
+    # Base dataset (no transform yet)
+    base_train = datasets.ImageFolder(os.path.join(root, "train"), transform=None)
 
-    # Helper to load datasets
-    def load_datasets(transform, train_split=True):
-        if dataset_name == "cifar10":
-            return datasets.CIFAR10(
-                root="./datasets", train=train_split, download=True, transform=transform
-            )
-        elif dataset_name == "cifar100":
-            return datasets.CIFAR100(
-                root="./datasets", train=train_split, download=True, transform=transform
-            )
-        else:
-            raise ValueError(f"Unknown dataset name: {cfg.dataset_name}")
+    # 90/10 split using cfg.seed
+    n_total = len(base_train)
+    n_train = int(0.9 * n_total)
+    n_val = n_total - n_train
+    gen = torch.Generator().manual_seed(seed)
+    train_subset, val_subset = random_split(base_train, [n_train, n_val], generator=gen)
 
-    # 1. Create two versions of the full dataset: one with Augmentation, one Clean
-    # Load official train and test sets
-    ds_train_aug = load_datasets(train_transform, train_split=True)
-    ds_test_aug = load_datasets(train_transform, train_split=False)
-    full_aug = ConcatDataset([ds_train_aug, ds_test_aug])
+    # Wrap with transforms
+    train_ds = TransformSubset(base_train, train_subset.indices, transform=train_tf)
+    val_ds = TransformSubset(base_train, val_subset.indices, transform=eval_tf)
 
-    ds_train_clean = load_datasets(val_transform, train_split=True)
-    ds_test_clean = load_datasets(val_transform, train_split=False)
-    full_clean = ConcatDataset([ds_train_clean, ds_test_clean])
+    # Test from val/ folder
+    test_ds = TinyImageNetVal(root, class_to_idx=base_train.class_to_idx, transform=eval_tf)
 
-    # 2. Calculate Split Sizes
-    total_size = len(full_aug)
-    train_size = int(cfg.train_ratio * total_size)
-    val_size = int(cfg.val_ratio * total_size)
+    # DataLoaders
+    train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True,
+                              num_workers=cfg.num_workers, pin_memory=pin_memory, drop_last=True)
+    val_loader = DataLoader(val_ds, batch_size=cfg.batch_size, shuffle=False,
+                            num_workers=cfg.num_workers, pin_memory=pin_memory)
+    test_loader = DataLoader(test_ds, batch_size=cfg.batch_size, shuffle=False,
+                             num_workers=cfg.num_workers, pin_memory=pin_memory)
 
-    # reproducibility on multi-threaded loader -----------------------------------------------------
-    g = torch.Generator().manual_seed(cfg.seed)
-
-    # 3. Generate Indices
-    indices = torch.randperm(total_size, generator=g).tolist()
-
-    # -----------------------------------------------------------------------------------------------
-
-    train_indices = indices[:train_size]
-    val_indices = indices[train_size : train_size + val_size]
-    test_indices = indices[train_size + val_size :]
-    debug_labels_count = int(len(test_indices) * cfg.debug_data_scale)
-    # Reduce data if fullTrain is False
-    if not cfg.full_train:
-        train_indices = train_indices[: max(1, debug_labels_count)]
-        val_indices = val_indices[: max(1, debug_labels_count)]
-        test_indices = test_indices[: max(1, debug_labels_count)]
-        print(f"Using reduced data: {debug_labels_count} epoches")
-
-    # 4. Create Subsets
-    # Train gets Augmented dataset, Val/Test get Clean dataset
-    train_dataset = Subset(full_aug, train_indices)
-    val_dataset = Subset(full_clean, val_indices)
-    test_dataset = Subset(full_clean, test_indices)
-
-    # 5. Create Loaders
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=cfg.batch_size,
-        shuffle=True,
-        num_workers=cfg.num_workers,
-        pin_memory=True,  # make so the memory wont spill into disk (non-paging)
-        worker_init_fn=seed_worker,
-        generator=g,
-    )
-
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=cfg.batch_size,
-        shuffle=False,
-        num_workers=cfg.num_workers,
-        pin_memory=True,
-        worker_init_fn=seed_worker,
-        generator=g,
-    )
-
-    test_loader = DataLoader(
-        test_dataset,
-        batch_size=cfg.batch_size,
-        shuffle=False,
-        num_workers=cfg.num_workers,
-        pin_memory=True,
-        worker_init_fn=seed_worker,
-        generator=g,
-    )
-    print(
-        f"Batches -> Train: {len(train_loader)}, Val: {len(val_loader)}, Test: {len(test_loader)}"
-    )
     return train_loader, val_loader, test_loader
