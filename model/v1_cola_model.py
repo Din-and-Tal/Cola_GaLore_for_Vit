@@ -16,14 +16,14 @@ class ColaViTConfig(ViTConfig):
 
     def __init__(
         self,
-        rank=None,
+        cola_rank_ratio=0.25,
         lr_act_type="gelu",  # Activation used inside the low-rank adapters
         only_lr_act=True,  # If True, relies primarily on the low-rank activation
         **kwargs,
     ):
         super().__init__(**kwargs)
         # Default rank to 1/4th of hidden size if not specified
-        self.rank = rank if rank is not None else self.hidden_size // 4
+        self.rank = int(self.hidden_size * cola_rank_ratio)
         self.lr_act_type = lr_act_type
         self.only_lr_act = only_lr_act
 

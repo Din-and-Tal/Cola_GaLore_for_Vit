@@ -11,7 +11,7 @@ from train.trainer_utils import validate_trainer_initialization
 from util.dataloader import get_data_loaders
 from train.trainer_utils import set_seed
 from util.memory_record import profile_memory
-from util.model import build_model, load_model
+from util.model import build_model
 from util.scheduler import CosineAnnealingWarmupRestarts
 
 
@@ -55,17 +55,6 @@ class Trainer:
             gamma=cfg.scheduler_gamma,
         )
 
-        if cfg.load_model:
-            model_path = os.path.join(cfg.output_dir, "model.pth")
-            load_model(
-                model=self.model,
-                optimizer=self.optimizer,
-                scheduler=self.scheduler,
-                model_path=model_path,
-                device=self.device,
-                optimizer_params=self.optimizer_params,
-            )
-
         if getattr(cfg, "compile_model", False):
             self.model = torch.compile(self.model)
 
@@ -92,14 +81,7 @@ class Trainer:
                 name=run_name,
                 entity=cfg.wandb_team_name,
                 config={
-                    "model_name": cfg.model_name,
-                    "dataset": cfg.dataset_name,
-                    "epochs": cfg.num_epochs,
-                    "batch_size": cfg.batch_size,
-                    "weight_decay": cfg.weight_decay,
-                    "image_size": cfg.image_size,
-                    "patch_size": cfg.patch_size,
-                    "cola_rank": cfg.cola_rank,
+                    "config": cfg
                 },
             )
 
@@ -120,5 +102,5 @@ class Trainer:
         # Check that nothing is None
         validate_trainer_initialization(self)
 
-    def train(self, trial=None):
-        return train_loop(self, trial)
+    def train(self,trial=None):
+        return train_loop(self,trial)

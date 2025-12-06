@@ -1,4 +1,3 @@
-#TODO: organize better / clean up unused params
 
 defaults:
   - _self_
@@ -19,15 +18,10 @@ seed: 42
 dataset_name: "tiny_imagenet"
 num_classes: 200
 
-base_output_dir: "./saved_models"
-save_model: false
-load_model:  #TODO : DELETE
-
 image_size: 64
 patch_size: 8
 num_channels: 3
 
-cola_rank: 128
 cola_rank_ratio: 0.25
 cola_lr_act_type: "gelu"
 

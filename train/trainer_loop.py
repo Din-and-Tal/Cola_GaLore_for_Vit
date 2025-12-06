@@ -3,10 +3,9 @@ import time
 from contextlib import nullcontext
 
 from train.trainer_utils import apply_mixup_cutmix
-from util.model import save_model
 
 
-def train_loop(trainer):
+def train_loop(trainer,trial):
     """Run full training using the Trainer object."""
     cfg = trainer.cfg
     best_acc = 0.0
@@ -59,19 +58,7 @@ def train_loop(trainer):
                 }
             )
 
-        # Save best model
-        if cfg.save_model:
-            best_acc = save_model(
-                trainer.model,
-                trainer.optimizer,
-                trainer.scheduler,
-                epoch,
-                train_loss,
-                val_acc,
-                best_acc,
-                cfg,
-                optimizer_dict=trainer.optimizer_params,
-            )
+
 
     # Final test
     if run_eval:
@@ -84,6 +71,8 @@ def train_loop(trainer):
     if trainer.wandb:
         trainer.wandb.log({"test_acc": test_acc})
         trainer.wandb.finish()
+        
+    return best_acc
 
 
 def epoch_step(trainer, loader, is_training, full_train=True):
