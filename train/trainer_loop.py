@@ -6,15 +6,15 @@ from train.trainer_utils import apply_mixup_cutmix
 from util.model import save_model
 
 
-def train_loop(trainer):
+def train_loop(trainer, trial=None):
     """Run full training using the Trainer object."""
     cfg = trainer.cfg
     best_acc = 0.0
 
     # Limit training when full_train is False
-    num_epochs = cfg.num_epochs if cfg.full_train else 1
-    run_eval = cfg.full_train
-
+    num_epochs = cfg.num_epochs if cfg.full_train else 3
+    # run_eval = cfg.full_train  # TODO: OVERRIDE FOR OPTUNA
+    run_eval = True
     print("\nStarting training...")
     start_time = time.time()
 
@@ -37,6 +37,18 @@ def train_loop(trainer):
             best_acc = val_acc if val_acc > best_acc else best_acc
         else:
             val_loss, val_acc = 0.0, 0.0
+
+        # ---------- HERE: report to Optuna & prune ----------
+        if trial is not None and run_eval:
+            # step = epoch (you can also use epoch+1, doesn't matter as long as consistent)
+            trial.report(val_acc, step=epoch)
+
+            # If the trial should be pruned, raise the exception
+            if trial.should_prune():
+                print(f"[Epoch {epoch}] Trial pruned by Optuna (val_acc={val_acc:.2f})")
+                import optuna
+                raise optuna.exceptions.TrialPruned()
+        # --------------------------------------------------------
 
         trainer.scheduler.step()
         lr = trainer.optimizer.param_groups[0]["lr"]
@@ -81,12 +93,14 @@ def train_loop(trainer):
         _, test_acc = epoch_step(trainer, trainer.loaders.test, False, cfg.full_train)
     else:
         test_acc = 0.0
+
     print(f"Training finished in {(time.time() - start_time)/60:.2f} minutes.")
     print(f"Best Val Acc: {best_acc:.2f}% | Test Acc: {test_acc:.2f}%")
 
     if trainer.wandb:
         trainer.wandb.log({"test_acc": test_acc})
         trainer.wandb.finish()
+    return best_acc
 
 
 def epoch_step(trainer, loader, is_training, full_train=True):
@@ -99,7 +113,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
 
     total_loss, correct, total = 0.0, 0, 0
     batch_idx = 0
-    max_batches = None if full_train else 4
+    max_batches = None if full_train else 1
 
     ctx = nullcontext() if is_training else torch.no_grad()
     model.train() if is_training else model.eval()
@@ -120,7 +134,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
             optimizer.zero_grad()
 
             # ----- AMP forward -----
-            with torch.cuda.amp.autocast(enabled=scaler.is_enabled()):
+            with torch.amp.autocast('cuda', enabled=scaler.is_enabled()):
                 outputs = model(pixel_values=inputs_mixed).logits
                 if used_mix:
                     loss = lam * loss_fn(outputs, targets_a) + (1.0 - lam) * loss_fn(
@@ -128,6 +142,8 @@ def epoch_step(trainer, loader, is_training, full_train=True):
                     )
                 else:
                     loss = loss_fn(outputs, targets)
+
+
 
             # ----- AMP backward + step -----
             if scaler.is_enabled():

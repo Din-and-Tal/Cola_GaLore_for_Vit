@@ -31,7 +31,7 @@ def get_optimizer(model, cfg):
         # 1) Plain AdamW on all parameters
         optimizer = optim.AdamW(
             model.parameters(),
-            lr=cfg.learning_rate,
+            lr=cfg.scheduler_max_lr,
             weight_decay=cfg.weight_decay,
         )
 
@@ -54,7 +54,7 @@ def get_optimizer(model, cfg):
         ]
         optimizer = GaLoreAdamW8bit(
             param_groups,
-            lr=cfg.learning_rate,
+            lr=cfg.scheduler_max_lr,
         )
 
     elif opt_name == "galore8_per_layer":
@@ -64,7 +64,7 @@ def get_optimizer(model, cfg):
         # AdamW for non-GaLore params
         optimizer = optim.AdamW(
             non_galore_params,
-            lr=cfg.learning_rate,
+            lr=cfg.scheduler_max_lr,
             weight_decay=cfg.weight_decay,
         )
 
@@ -82,7 +82,7 @@ def get_optimizer(model, cfg):
                         "weight_decay": cfg.weight_decay,
                     }
                 ],
-                lr=cfg.learning_rate,
+                lr=cfg.max_scheduler_lr,
             )
 
         # Hook to update that param after grad accumulation
