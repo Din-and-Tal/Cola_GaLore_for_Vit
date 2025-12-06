@@ -30,8 +30,7 @@ class Trainer:
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.scaler = GradScaler(enabled=getattr(cfg, "use_amp", False) and self.device == "cuda")
-
+        self.scaler = torch.amp.GradScaler('cuda', enabled=getattr(cfg, "use_amp", False) and self.device == "cuda")
         set_seed(cfg.seed)
 
         # 2. Data
@@ -72,17 +71,31 @@ class Trainer:
 
         # 5. Wandb Initialization
         # TODO: capture important data
+
+        run_name = (
+            f"lr{cfg.scheduler_max_lr:.0e}_wd{cfg.weight_decay:.0e}_"
+            f"warmup{cfg.warmup_epochs}_ls{cfg.label_smoothing:.2f}"
+        )
+
+        # Add augmentation parameters if they exist
+
+        if hasattr(cfg, 'mixup_alpha') and cfg.mixup_alpha > 0:
+            run_name += f"_mixup{cfg.mixup_alpha:.2f}"
+        if hasattr(cfg, 'cutmix_alpha') and cfg.cutmix_alpha > 0:
+            run_name += f"_cutmix{cfg.cutmix_alpha:.2f}"
+        if hasattr(cfg, 'mix_prob') and cfg.mix_prob > 0:
+            run_name += f"_mixprob{cfg.mix_prob:.2f}"
+
         if cfg.use_wandb:
             self.wandb = wandb.init(
                 project=cfg.wandb_project_name,
-                name=f"{cfg.size}_{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
+                name=run_name,
                 entity=cfg.wandb_team_name,
                 config={
                     "model_name": cfg.model_name,
                     "dataset": cfg.dataset_name,
                     "epochs": cfg.num_epochs,
                     "batch_size": cfg.batch_size,
-                    "learning_rate": cfg.learning_rate,
                     "weight_decay": cfg.weight_decay,
                     "image_size": cfg.image_size,
                     "patch_size": cfg.patch_size,
@@ -107,5 +120,5 @@ class Trainer:
         # Check that nothing is None
         validate_trainer_initialization(self)
 
-    def train(self):
-        train_loop(self)
+    def train(self, trial=None):
+        return train_loop(self, trial)
