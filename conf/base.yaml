@@ -34,11 +34,11 @@ batch_size: 512
 weight_decay: 0.06
 warmup_epochs: 5
 max_grad_norm: 1.0
-early_stopping_patience: 20
+early_stopping_patience: 40
 
 hidden_dropout_prob: 0.2
 label_smoothing: 0.1
-scheduler_first_cycle_steps: 300
+scheduler_first_cycle_steps: ${num_epochs}
 scheduler_cycle_mult: 1.0
 scheduler_max_lr: 3e-4 # this value is initialized in all optimizers
 scheduler_min_lr: 1e-6
