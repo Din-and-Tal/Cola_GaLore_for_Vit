@@ -31,7 +31,9 @@ class Trainer:
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.scaler = torch.amp.GradScaler('cuda', enabled=getattr(cfg, "use_amp", False) and self.device == "cuda")
+        self.scaler = torch.amp.GradScaler(
+            "cuda", enabled=getattr(cfg, "use_amp", False) and self.device == "cuda"
+        )
         set_seed(cfg.seed)
 
         # 2. Data
@@ -63,11 +65,16 @@ class Trainer:
 
         if cfg.use_wandb:
             today = datetime.now().strftime("%d_%m_%Y")
+            project_name = (
+                f"test_{cfg.wandb_project_name}"
+                if not cfg.full_train
+                else f"{cfg.wandb_project_name}_{today}"
+            )
             self.wandb = wandb.init(
-                project=f"{cfg.wandb_project_name}_{today}",
+                project=project_name,
                 name=f"{cfg.size}_{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
                 entity=cfg.wandb_team_name,
-                config={"cfg": cfg},
+                config={"cfg": cfg, "cola_rank_ratio": cfg.cola_rank_ratio},
             )
 
         # 6. run one profiling pass to get HTML memory timeline
@@ -87,5 +94,5 @@ class Trainer:
         # Check that nothing is None
         validate_trainer_initialization(self)
 
-    def train(self,trial=None):
-        return train_loop(self,trial)
+    def train(self, trial=None):
+        return train_loop(self, trial)

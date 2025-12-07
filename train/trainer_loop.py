@@ -1,17 +1,20 @@
 import torch
 import time
+import optuna
 from contextlib import nullcontext
 
 from train.trainer_utils import apply_mixup_cutmix
 
 
-def train_loop(trainer,trial):
+def train_loop(trainer, trial):
     """Run full training using the Trainer object."""
     cfg = trainer.cfg
     best_acc = 0.0
+    best_loss = float("inf")
+    patience_counter = 0
 
     # Limit training when full_train is False
-    num_epochs = cfg.num_epochs if cfg.full_train else 3
+    num_epochs = cfg.num_epochs if cfg.full_train else 1
     run_eval = cfg.full_train
 
     print("\nStarting training...")
@@ -32,6 +35,23 @@ def train_loop(trainer,trial):
                 trainer, trainer.loaders.val, False, cfg.full_train
             )
             best_acc = val_acc if val_acc > best_acc else best_acc
+
+            if val_loss < best_loss:
+                best_loss = val_loss
+                patience_counter = 0
+            else:
+                patience_counter += 1
+
+            if patience_counter >= cfg.early_stopping_patience:
+                print(f"Early stopping triggered at epoch {epoch}")
+                break
+
+            # ----- Optuna Pruning -----
+            if trial is not None:
+                trial.report(val_loss, epoch)  # Report loss instead of acc
+                if trial.should_prune():
+                    raise optuna.exceptions.TrialPruned()
+
         else:
             val_loss, val_acc = 0.0, 0.0
 
@@ -58,8 +78,6 @@ def train_loop(trainer,trial):
                 }
             )
 
-
-
     # Final test
     if run_eval:
         _, test_acc = epoch_step(trainer, trainer.loaders.test, False, cfg.full_train)
@@ -71,8 +89,8 @@ def train_loop(trainer,trial):
     if trainer.wandb:
         trainer.wandb.log({"test_acc": test_acc})
         trainer.wandb.finish()
-        
-    return best_acc
+
+    return best_loss  # Return loss for minimization
 
 
 def epoch_step(trainer, loader, is_training, full_train=True):
@@ -85,7 +103,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
 
     total_loss, correct, total = 0.0, 0, 0
     batch_idx = 0
-    max_batches = None if full_train else 4
+    max_batches = None if full_train else 1
 
     ctx = nullcontext() if is_training else torch.no_grad()
     model.train() if is_training else model.eval()
@@ -94,7 +112,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
         if max_batches is not None and batch_idx >= max_batches:
             break
 
-        inputs= inputs.to(device, non_blocking=True)
+        inputs = inputs.to(device, non_blocking=True)
         targets = targets.to(device, non_blocking=True)
 
         if is_training:
@@ -122,14 +140,18 @@ def epoch_step(trainer, loader, is_training, full_train=True):
                 # optional: gradient clipping
                 if getattr(cfg, "max_grad_norm", 0.0) and cfg.max_grad_norm > 0:
                     scaler.unscale_(optimizer)
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), cfg.max_grad_norm
+                    )
 
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 loss.backward()
                 if getattr(cfg, "max_grad_norm", 0.0) and cfg.max_grad_norm > 0:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), cfg.max_grad_norm
+                    )
                 optimizer.step()
 
         else:

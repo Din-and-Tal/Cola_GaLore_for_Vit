@@ -1,11 +1,14 @@
-
 optuna:
   study_name: "vit_hpo"
-  direction: "maximize"  # maximize accuracy
-  n_trials: 50
+  direction: "minimize"  # Changed from maximize to minimize val_loss
+  n_trials: 30
   n_jobs: 1
   sampler: "tpe"  # Tree-structured Parzen Estimator
-  n_warmup_steps: 10
+  
+  # Pruner configuration
+  pruner: "median"      # MedianPruner is robust
+  n_startup_trials: 5   # Let the first 5 trials run fully to establish a baseline
+  n_warmup_steps: 10    # Don't prune the first 10 epochs of any trial
 
   search_space:
     cola_rank_ratio: [0, 1] 
