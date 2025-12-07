@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# config_names=(
+config_names=(
     # "vit_adamw"
     # "vit_glora"
     # "vit_glora_layer"
@@ -11,7 +11,7 @@
     "v1_cola_adamw"
     "v1_cola_glora"
     "v1_cola_glora_layer"
-# )
+)
 
 for config in "${config_names[@]}"; do
     echo "Running with config: $config"
