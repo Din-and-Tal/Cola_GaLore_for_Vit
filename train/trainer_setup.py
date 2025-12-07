@@ -68,11 +68,11 @@ class Trainer:
             project_name = (
                 f"test_{cfg.wandb_project_name}"
                 if not cfg.full_train
-                else f"{cfg.cola_rank_ratio}_{cfg.wandb_project_name}_{today}"
+                else f"{cfg.wandb_project_name}_{today}"
             )
             self.wandb = wandb.init(
                 project=project_name,
-                name=f"{cfg.size}_{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
+                name=f"{cfg.cola_rank_ratio}_{cfg.size}_{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
                 entity=cfg.wandb_team_name,
                 config={"cfg": cfg},
             )
