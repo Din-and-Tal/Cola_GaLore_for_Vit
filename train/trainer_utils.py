@@ -4,11 +4,6 @@ import random
 import numpy as np
 
 
-
-import torch
-import numpy as np
-
-
 def rand_bbox(size, lam):
     """CutMix bounding box."""
     W = size[-1]

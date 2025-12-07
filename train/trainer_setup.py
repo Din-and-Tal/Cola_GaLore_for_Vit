@@ -31,8 +31,8 @@ class Trainer:
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.scaler = torch.amp.GradScaler(
-            "cuda", enabled=getattr(cfg, "use_amp", False) and self.device == "cuda"
+        self.scaler = torch.cuda.amp.GradScaler(
+            enabled=getattr(cfg, "use_amp", False) and self.device == "cuda"
         )
         set_seed(cfg.seed)
 
