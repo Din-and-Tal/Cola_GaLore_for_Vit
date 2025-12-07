@@ -61,11 +61,10 @@ class Trainer:
         # 5. Wandb Initialization
 
         if cfg.use_wandb:
-            today = datetime.now().strftime("%d_%m_%Y")
             project_name = (
                 "test_runs"
                 if not cfg.full_train
-                else f"{cfg.wandb_project_name}_{today}"
+                else cfg.wandb_project_name
             )
 
             # Convert config to dict to save all parameters individually
