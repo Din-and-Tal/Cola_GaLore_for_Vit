@@ -13,6 +13,7 @@ from train.trainer_utils import set_seed
 from util.memory_record import profile_memory
 from util.model import build_model
 from util.scheduler import CosineAnnealingWarmupRestarts
+from datetime import datetime
 
 
 class Trainer:
@@ -59,30 +60,14 @@ class Trainer:
             self.model = torch.compile(self.model)
 
         # 5. Wandb Initialization
-        # TODO: capture important data
-
-        run_name = (
-            f"lr{cfg.scheduler_max_lr:.0e}_wd{cfg.weight_decay:.0e}_"
-            f"warmup{cfg.warmup_epochs}_ls{cfg.label_smoothing:.2f}"
-        )
-
-        # Add augmentation parameters if they exist
-
-        if hasattr(cfg, 'mixup_alpha') and cfg.mixup_alpha > 0:
-            run_name += f"_mixup{cfg.mixup_alpha:.2f}"
-        if hasattr(cfg, 'cutmix_alpha') and cfg.cutmix_alpha > 0:
-            run_name += f"_cutmix{cfg.cutmix_alpha:.2f}"
-        if hasattr(cfg, 'mix_prob') and cfg.mix_prob > 0:
-            run_name += f"_mixprob{cfg.mix_prob:.2f}"
 
         if cfg.use_wandb:
+            today = datetime.now().strftime("%d_%m_%Y")
             self.wandb = wandb.init(
-                project=cfg.wandb_project_name,
-                name=run_name,
+                project=f"{cfg.wandb_project_name}_{today}",
+                name=f"{cfg.size}_{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
                 entity=cfg.wandb_team_name,
-                config={
-                    "config": cfg
-                },
+                config={"cfg": cfg},
             )
 
         # 6. run one profiling pass to get HTML memory timeline
