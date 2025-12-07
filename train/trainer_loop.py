@@ -11,7 +11,6 @@ def train_loop(trainer, trial):
     cfg = trainer.cfg
     best_acc = 0.0
     best_loss = float("inf")
-    patience_counter = 0
 
     # Limit training when full_train is False
     num_epochs = cfg.num_epochs if cfg.full_train else 1
@@ -38,13 +37,6 @@ def train_loop(trainer, trial):
 
             if val_loss < best_loss:
                 best_loss = val_loss
-                patience_counter = 0
-            else:
-                patience_counter += 1
-
-            if patience_counter >= cfg.early_stopping_patience:
-                print(f"Early stopping triggered at epoch {epoch}")
-                break
 
             # ----- Optuna Pruning -----
             if trial is not None:

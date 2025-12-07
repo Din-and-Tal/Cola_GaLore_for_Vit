@@ -66,7 +66,7 @@ class Trainer:
         if cfg.use_wandb:
             today = datetime.now().strftime("%d_%m_%Y")
             project_name = (
-                f"test_{cfg.wandb_project_name}"
+                f"test_runs"
                 if not cfg.full_train
                 else f"{cfg.wandb_project_name}_{today}"
             )

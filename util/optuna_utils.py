@@ -1,15 +1,20 @@
 import optuna
-from optuna.pruners import MedianPruner
+from optuna.pruners import MedianPruner, PatientPruner
 from optuna.samplers import TPESampler
 from typing import Dict, Any
 
 
 def create_optuna_study(config: Dict[str, Any]) -> optuna.Study:
     sampler = TPESampler(seed=config.seed)
+
+    pruner = MedianPruner(n_warmup_steps=config.optuna.n_warmup_steps)
+    if "early_stopping_patience" in config.optuna:
+        pruner = PatientPruner(pruner, patience=config.optuna.early_stopping_patience)
+
     study = optuna.create_study(
         study_name=config.optuna.study_name,
         direction=config.optuna.direction,
-        pruner=MedianPruner(n_warmup_steps=config.optuna.n_warmup_steps),
+        pruner=pruner,
         sampler=sampler,
     )
     return study

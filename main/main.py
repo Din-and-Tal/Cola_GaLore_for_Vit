@@ -37,7 +37,7 @@ def main(cfg):
                 print(f"[Trial {trial.number}] Pruned.")
                 raise
 
-        study.optimize(objective, n_trials=cfg.optuna.n_trials)
+        study.optimize(objective, n_trials=cfg.optuna.n_trials if cfg.full_train else 1)
         print(f"Best params: {study.best_params}")
 
     else:
