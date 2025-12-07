@@ -9,7 +9,7 @@ optuna:
   pruner: "median"      # MedianPruner is robust
   n_startup_trials: 5   # Let the first 5 trials run fully to establish a baseline
   n_warmup_steps: 10    # Don't prune the first 10 epochs of any trial
-  early_stopping_patience: 40
+  early_stopping_patience: 30
 
   search_space:
     cola_rank_ratio: [0, 1] 

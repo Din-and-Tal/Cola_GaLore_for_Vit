@@ -13,7 +13,8 @@ from util.optuna_utils import create_optuna_study, suggest_hyperparams
 
 @hydra.main(version_base=None, config_path="../conf", config_name="")
 def main(cfg):
-    torch.set_float32_matmul_precision("high")
+    
+    # torch.set_float32_matmul_precision("high")
 
     if cfg.get("use_optuna", False):
         study = create_optuna_study(cfg)
