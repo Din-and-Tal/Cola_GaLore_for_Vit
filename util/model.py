@@ -1,13 +1,10 @@
-import torch
-import os
-
 from transformers import ViTConfig, ViTForImageClassification
 
 from model.v1_cola_model import ColaViTConfig, ColaViTForImageClassification
 from model.v2_cola_model import convert_vit_to_cola_m
 
-def build_model(cfg):
 
+def build_model(cfg):
     vit_config = ViTConfig(
         image_size=cfg.image_size,
         patch_size=cfg.patch_size,
@@ -37,4 +34,4 @@ def build_model(cfg):
         v2_cola = convert_vit_to_cola_m(v2_cola, rank_ratio=cfg.cola_rank_ratio)
         return v2_cola
 
-    raise ValueError(f"bad model name, ")
+    raise ValueError("bad model name, ")

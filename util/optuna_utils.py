@@ -1,10 +1,9 @@
 import optuna
 from optuna.pruners import MedianPruner, PatientPruner
 from optuna.samplers import TPESampler
-from typing import Dict, Any
 
 
-def create_optuna_study(config: Dict[str, Any]) -> optuna.Study:
+def create_optuna_study(config) -> optuna.Study:
     sampler = TPESampler(seed=config.seed)
 
     pruner = MedianPruner(n_warmup_steps=config.optuna.n_warmup_steps)

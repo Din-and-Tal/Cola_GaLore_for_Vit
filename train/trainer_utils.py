@@ -1,7 +1,7 @@
-import os
-import torch
 import random
+
 import numpy as np
+import torch
 
 
 def rand_bbox(size, lam):

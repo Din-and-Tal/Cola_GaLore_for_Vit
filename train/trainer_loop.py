@@ -1,7 +1,7 @@
-import torch
 import time
+
 import optuna
-from contextlib import nullcontext
+import torch
 
 from train.trainer_utils import apply_mixup_cutmix
 
@@ -75,7 +75,7 @@ def train_loop(trainer, trial):
         _, test_acc = epoch_step(trainer, trainer.loaders.test, False, cfg.full_train)
     else:
         test_acc = 0.0
-    print(f"Training finished in {(time.time() - start_time)/60:.2f} minutes.")
+    print(f"Training finished in {(time.time() - start_time) / 60:.2f} minutes.")
     print(f"Best Val Acc: {best_acc:.2f}% | Test Acc: {test_acc:.2f}%")
 
     if trainer.wandb:
@@ -97,7 +97,6 @@ def epoch_step(trainer, loader, is_training, full_train=True):
     batch_idx = 0
     max_batches = None if full_train else 1
 
-    ctx = nullcontext() if is_training else torch.no_grad()
     model.train() if is_training else model.eval()
 
     for batch_idx, (inputs, targets) in enumerate(loader):
@@ -116,7 +115,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
             optimizer.zero_grad()
 
             # ----- AMP forward -----
-            with torch.cuda.amp.autocast(enabled=scaler.is_enabled()):
+            with torch.autocast(device_type=cfg.device, enabled=scaler.is_enabled()):
                 outputs = model(pixel_values=inputs_mixed).logits
                 if used_mix:
                     loss = lam * loss_fn(outputs, targets_a) + (1.0 - lam) * loss_fn(

@@ -1,19 +1,16 @@
-import os
-import torch
-from torch.cuda.amp import GradScaler
+from datetime import datetime
 from types import SimpleNamespace
 
-import wandb
+import torch
 
+import wandb
 from optimizer.optimizer import get_optimizer
 from train.trainer_loop import train_loop
-from train.trainer_utils import validate_trainer_initialization
+from train.trainer_utils import set_seed, validate_trainer_initialization
 from util.dataloader import get_data_loaders
-from train.trainer_utils import set_seed
 from util.memory_record import profile_memory
 from util.model import build_model
 from util.scheduler import CosineAnnealingWarmupRestarts
-from datetime import datetime
 
 
 class Trainer:
@@ -31,7 +28,7 @@ class Trainer:
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.scaler = torch.cuda.amp.GradScaler(
+        self.scaler = torch.GradScaler(
             enabled=getattr(cfg, "use_amp", False) and self.device == "cuda"
         )
         set_seed(cfg.seed)
@@ -66,7 +63,7 @@ class Trainer:
         if cfg.use_wandb:
             today = datetime.now().strftime("%d_%m_%Y")
             project_name = (
-                f"test_runs"
+                "test_runs"
                 if not cfg.full_train
                 else f"{cfg.wandb_project_name}_{today}"
             )
