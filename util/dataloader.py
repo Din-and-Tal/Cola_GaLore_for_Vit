@@ -111,19 +111,40 @@ def get_data_loaders(cfg):
     mean = (0.4802, 0.4481, 0.3975)
     std = (0.2770, 0.2691, 0.2821)
 
+    # Augmentation params
+    crop_min_scale = getattr(cfg, "aug_crop_min_scale", 0.6)
+    crop_max_scale = getattr(cfg, "aug_crop_max_scale", 1.0)
+    crop_min_ratio = getattr(cfg, "aug_crop_min_ratio", 0.75)
+    crop_max_ratio = getattr(cfg, "aug_crop_max_ratio", 1.33)
+
+    rand_num_ops = getattr(cfg, "aug_rand_num_ops", 2)
+    rand_magnitude = getattr(cfg, "aug_rand_magnitude", 9)
+
+    erase_prob = getattr(cfg, "aug_erase_prob", 0.1)
+    erase_min_scale = getattr(cfg, "aug_erase_min_scale", 0.02)
+    erase_max_scale = getattr(cfg, "aug_erase_max_scale", 0.33)
+    erase_min_ratio = getattr(cfg, "aug_erase_min_ratio", 0.3)
+    erase_max_ratio = getattr(cfg, "aug_erase_max_ratio", 3.3)
+
     train_tf = transforms.Compose(
         [
             # more diverse crops (zoom in/out, slight aspect changes)
             transforms.RandomResizedCrop(
-                image_size, scale=(0.6, 1.0), ratio=(0.75, 1.33)
+                image_size,
+                scale=(crop_min_scale, crop_max_scale),
+                ratio=(crop_min_ratio, crop_max_ratio),
             ),
             transforms.RandomHorizontalFlip(),
             # RandAugment: extra color / geometric jitter
-            transforms.RandAugment(num_ops=2, magnitude=9),
+            transforms.RandAugment(num_ops=rand_num_ops, magnitude=rand_magnitude),
             transforms.ToTensor(),
             transforms.Normalize(mean, std),
             # Random erasing on some images (very good for ViT)
-            transforms.RandomErasing(p=0.1, scale=(0.02, 0.33), ratio=(0.3, 3.3)),
+            transforms.RandomErasing(
+                p=erase_prob,
+                scale=(erase_min_scale, erase_max_scale),
+                ratio=(erase_min_ratio, erase_max_ratio),
+            ),
         ]
     )
 

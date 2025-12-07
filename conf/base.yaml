@@ -2,7 +2,7 @@ defaults:
   - _self_
   - optuna
 
-use_optuna: true
+use_optuna: false
 use_wandb: true
 
 full_train: true
@@ -29,7 +29,7 @@ glora_update_proj_gap: 200
 glora_scale: 0.25
 glora_proj_type: "std"
 
-num_epochs: 1000
+num_epochs: 300
 batch_size: 512
 weight_decay: 0.06
 warmup_epochs: 5
@@ -50,6 +50,19 @@ mixup_alpha: 0.2   # small → won’t kill train_acc
 use_cutmix: true
 cutmix_alpha: 0.2  # small
 mix_prob: 0.2      # prob to apply mixup/cutmix on a batch
+
+# Augmentation
+aug_crop_min_scale: 0.6
+aug_crop_max_scale: 1.0
+aug_crop_min_ratio: 0.75
+aug_crop_max_ratio: 1.33
+aug_rand_num_ops: 2
+aug_rand_magnitude: 9
+aug_erase_prob: 0.1
+aug_erase_min_scale: 0.02
+aug_erase_max_scale: 0.33
+aug_erase_min_ratio: 0.3
+aug_erase_max_ratio: 3.3
 
 wandb_project_name: "tiny-imagenet"
 wandb_team_name: "din-alon-technion-israel-institute-of-technology"

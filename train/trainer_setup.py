@@ -67,11 +67,24 @@ class Trainer:
                 if not cfg.full_train
                 else f"{cfg.wandb_project_name}_{today}"
             )
+
+            # Convert config to dict to save all parameters individually
+            config_dict = {}
+            for key in dir(cfg):
+                if not key.startswith("_"):
+                    try:
+                        value = getattr(cfg, key)
+                        # Skip methods and non-serializable objects
+                        if not callable(value):
+                            config_dict[key] = value
+                    except:
+                        pass
+
             self.wandb = wandb.init(
                 project=project_name,
-                name=f"{cfg.cola_rank_ratio}_{cfg.size}_{cfg.model_name}_{cfg.optimizer_name}_{cfg.dataset_name}",
+                name=f"{cfg.size}_{cfg.config_name}",
                 entity=cfg.wandb_team_name,
-                config={"cfg": cfg},
+                config=config_dict,
             )
 
         # 6. run one profiling pass to get HTML memory timeline
