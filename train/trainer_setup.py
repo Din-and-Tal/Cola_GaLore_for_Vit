@@ -1,6 +1,5 @@
 import os
 import torch
-from torch.cuda.amp import GradScaler
 from types import SimpleNamespace
 
 import wandb
@@ -30,7 +29,7 @@ class Trainer:
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.scaler = torch.amp.GradScaler('cuda', enabled=getattr(cfg, "use_amp", False) and self.device == "cuda")
+        self.scaler = torch.GradScaler('cuda', enabled=getattr(cfg, "use_amp", False) and self.device == "cuda")
         set_seed(cfg.seed)
 
         # 2. Data

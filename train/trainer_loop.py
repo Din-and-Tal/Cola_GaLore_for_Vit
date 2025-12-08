@@ -134,7 +134,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
             optimizer.zero_grad()
 
             # ----- AMP forward -----
-            with torch.amp.autocast('cuda', enabled=scaler.is_enabled()):
+            with torch.autocast('cuda', enabled=scaler.is_enabled()):
                 outputs = model(pixel_values=inputs_mixed).logits
                 if used_mix:
                     loss = lam * loss_fn(outputs, targets_a) + (1.0 - lam) * loss_fn(
