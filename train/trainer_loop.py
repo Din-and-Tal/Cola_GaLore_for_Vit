@@ -1,20 +1,24 @@
-import torch
 import time
-from contextlib import nullcontext
+
+import optuna
+import torch
 
 from train.trainer_utils import apply_mixup_cutmix
-from util.model import save_model
 
 
-def train_loop(trainer, trial=None):
+def train_loop(trainer, trial):
     """Run full training using the Trainer object."""
     cfg = trainer.cfg
     best_acc = 0.0
+    best_loss = float("inf")
+    patience_counter = 0
+    early_stopping_patience = getattr(cfg, "early_stopping_patience", -1)
+    early_stopping_patience = -1 if cfg.use_optuna else early_stopping_patience
 
     # Limit training when full_train is False
-    num_epochs = cfg.num_epochs if cfg.full_train else 3
-    # run_eval = cfg.full_train  # TODO: OVERRIDE FOR OPTUNA
-    run_eval = True
+    num_epochs = cfg.num_epochs if cfg.full_train else 1
+    run_eval = cfg.full_train
+
     print("\nStarting training...")
     start_time = time.time()
 
@@ -35,6 +39,28 @@ def train_loop(trainer, trial=None):
                 trainer, trainer.loaders.val, False, cfg.full_train
             )
             best_acc = val_acc if val_acc > best_acc else best_acc
+
+            if val_loss < best_loss:
+                best_loss = val_loss
+                patience_counter = 0
+            else:
+                patience_counter += 1
+
+            if (
+                early_stopping_patience > 0
+                and patience_counter >= early_stopping_patience
+            ):
+                print(
+                    f"\n[Early Stopping] Triggered after {patience_counter} epochs without improvement."
+                )
+                break
+
+            # ----- Optuna Pruning -----
+            if trial is not None:
+                trial.report(val_loss, epoch)  # Report loss instead of acc
+                if trial.should_prune():
+                    raise optuna.exceptions.TrialPruned()
+
         else:
             val_loss, val_acc = 0.0, 0.0
 
@@ -73,34 +99,20 @@ def train_loop(trainer, trial=None):
                 }
             )
 
-        # Save best model
-        if cfg.save_model:
-            best_acc = save_model(
-                trainer.model,
-                trainer.optimizer,
-                trainer.scheduler,
-                epoch,
-                train_loss,
-                val_acc,
-                best_acc,
-                cfg,
-                optimizer_dict=trainer.optimizer_params,
-            )
-
     # Final test
     if run_eval:
         print(f"\n[Final] Testing on {len(trainer.loaders.test)} batches...")
         _, test_acc = epoch_step(trainer, trainer.loaders.test, False, cfg.full_train)
     else:
         test_acc = 0.0
-
-    print(f"Training finished in {(time.time() - start_time)/60:.2f} minutes.")
+    print(f"Training finished in {(time.time() - start_time) / 60:.2f} minutes.")
     print(f"Best Val Acc: {best_acc:.2f}% | Test Acc: {test_acc:.2f}%")
 
     if trainer.wandb:
         trainer.wandb.log({"test_acc": test_acc})
         trainer.wandb.finish()
-    return best_acc
+
+    return best_loss  # Return loss for minimization
 
 
 def epoch_step(trainer, loader, is_training, full_train=True):
@@ -115,14 +127,13 @@ def epoch_step(trainer, loader, is_training, full_train=True):
     batch_idx = 0
     max_batches = None if full_train else 1
 
-    ctx = nullcontext() if is_training else torch.no_grad()
     model.train() if is_training else model.eval()
 
     for batch_idx, (inputs, targets) in enumerate(loader):
         if max_batches is not None and batch_idx >= max_batches:
             break
 
-        inputs= inputs.to(device, non_blocking=True)
+        inputs = inputs.to(device, non_blocking=True)
         targets = targets.to(device, non_blocking=True)
 
         if is_training:
@@ -134,7 +145,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
             optimizer.zero_grad()
 
             # ----- AMP forward -----
-            with torch.autocast('cuda', enabled=scaler.is_enabled()):
+            with torch.autocast(device_type=device, enabled=scaler.is_enabled()):
                 outputs = model(pixel_values=inputs_mixed).logits
                 if used_mix:
                     loss = lam * loss_fn(outputs, targets_a) + (1.0 - lam) * loss_fn(
@@ -152,14 +163,18 @@ def epoch_step(trainer, loader, is_training, full_train=True):
                 # optional: gradient clipping
                 if getattr(cfg, "max_grad_norm", 0.0) and cfg.max_grad_norm > 0:
                     scaler.unscale_(optimizer)
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), cfg.max_grad_norm
+                    )
 
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 loss.backward()
                 if getattr(cfg, "max_grad_norm", 0.0) and cfg.max_grad_norm > 0:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), cfg.max_grad_norm
+                    )
                 optimizer.step()
 
         else:

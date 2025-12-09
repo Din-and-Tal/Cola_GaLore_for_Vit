@@ -1,16 +1,14 @@
-import os
-import torch
 from types import SimpleNamespace
 
-import wandb
+import torch
 
+import wandb
 from optimizer.optimizer import get_optimizer
 from train.trainer_loop import train_loop
-from train.trainer_utils import validate_trainer_initialization
+from train.trainer_utils import set_seed, validate_trainer_initialization
 from util.dataloader import get_data_loaders
-from train.trainer_utils import set_seed
 from util.memory_record import profile_memory
-from util.model import build_model, load_model
+from util.model import build_model
 from util.scheduler import CosineAnnealingWarmupRestarts
 
 
@@ -29,7 +27,9 @@ class Trainer:
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.scaler = torch.GradScaler('cuda', enabled=getattr(cfg, "use_amp", False) and self.device == "cuda")
+        self.scaler = torch.GradScaler(
+            enabled=getattr(cfg, "use_amp", False) and self.device == "cuda"
+        )
         set_seed(cfg.seed)
 
         # 2. Data
@@ -54,52 +54,32 @@ class Trainer:
             gamma=cfg.scheduler_gamma,
         )
 
-        if cfg.load_model:
-            model_path = os.path.join(cfg.output_dir, "model.pth")
-            load_model(
-                model=self.model,
-                optimizer=self.optimizer,
-                scheduler=self.scheduler,
-                model_path=model_path,
-                device=self.device,
-                optimizer_params=self.optimizer_params,
-            )
-
-        if getattr(cfg, "compile_model", False):
-            self.model = torch.compile(self.model)
-
         # 5. Wandb Initialization
-        # TODO: capture important data
-
-        run_name = (
-            f"lr{cfg.scheduler_max_lr:.0e}_wd{cfg.weight_decay:.0e}_"
-            f"warmup{cfg.warmup_epochs}_ls{cfg.label_smoothing:.2f}"
-        )
-
-        # Add augmentation parameters if they exist
-
-        if hasattr(cfg, 'mixup_alpha') and cfg.mixup_alpha > 0:
-            run_name += f"_mixup{cfg.mixup_alpha:.2f}"
-        if hasattr(cfg, 'cutmix_alpha') and cfg.cutmix_alpha > 0:
-            run_name += f"_cutmix{cfg.cutmix_alpha:.2f}"
-        if hasattr(cfg, 'mix_prob') and cfg.mix_prob > 0:
-            run_name += f"_mixprob{cfg.mix_prob:.2f}"
 
         if cfg.use_wandb:
+            project_name = (
+                "test_runs"
+                if not cfg.full_train
+                else cfg.wandb_project_name
+            )
+
+            # Convert config to dict to save all parameters individually
+            config_dict = {}
+            for key in dir(cfg):
+                if not key.startswith("_"):
+                    try:
+                        value = getattr(cfg, key)
+                        # Skip methods and non-serializable objects
+                        if not callable(value):
+                            config_dict[key] = value
+                    except:
+                        pass
+
             self.wandb = wandb.init(
-                project=cfg.wandb_project_name,
-                name=run_name,
+                project=project_name,
+                name=f"{cfg.size}_{cfg.config_name}",
                 entity=cfg.wandb_team_name,
-                config={
-                    "model_name": cfg.model_name,
-                    "dataset": cfg.dataset_name,
-                    "epochs": cfg.num_epochs,
-                    "batch_size": cfg.batch_size,
-                    "weight_decay": cfg.weight_decay,
-                    "image_size": cfg.image_size,
-                    "patch_size": cfg.patch_size,
-                    "cola_rank": cfg.cola_rank,
-                },
+                config=config_dict,
             )
 
         # 6. run one profiling pass to get HTML memory timeline

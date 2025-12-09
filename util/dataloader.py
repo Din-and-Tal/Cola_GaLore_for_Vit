@@ -1,13 +1,12 @@
 import os
-import zipfile
 import urllib.request
+import zipfile
 from pathlib import Path
 
 import torch
-from torch.utils.data import DataLoader, Dataset, Subset, random_split
-from torchvision import datasets, transforms
 from PIL import Image
-
+from torch.utils.data import DataLoader, Dataset, random_split
+from torchvision import datasets, transforms
 
 # =========================
 # CONSTANTS
@@ -32,7 +31,7 @@ def _ensure_tiny_imagenet() -> Path:
     print(f"[TinyImageNet] Downloading to {zip_path} ...")
     urllib.request.urlretrieve(TINY_IMAGENET_URL, zip_path)
 
-    print(f"[TinyImageNet] Unzipping ...")
+    print("[TinyImageNet] Unzipping ...")
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(DATASET_DIR)
 
@@ -42,6 +41,7 @@ def _ensure_tiny_imagenet() -> Path:
 
 class TinyImageNetVal(Dataset):
     """Use tiny-imagenet-200/val as test set."""
+
     def __init__(self, root, class_to_idx, transform=None):
         val_root = os.path.join(root, "val")
         images_dir = os.path.join(val_root, "images")
@@ -72,6 +72,7 @@ class TinyImageNetVal(Dataset):
 
 class TransformSubset(Dataset):
     """Subset wrapper that applies its own transform (so val never sees train_tf)."""
+
     def __init__(self, base_dataset, indices, transform=None):
         self.base_dataset = base_dataset
         self.indices = indices
@@ -110,28 +111,50 @@ def get_data_loaders(cfg):
     mean = (0.4802, 0.4481, 0.3975)
     std = (0.2770, 0.2691, 0.2821)
 
-    train_tf = transforms.Compose([
-        # more diverse crops (zoom in/out, slight aspect changes)
-        transforms.RandomResizedCrop(
-            image_size, scale=(0.6, 1.0), ratio=(0.75, 1.33)
-        ),
-        transforms.RandomHorizontalFlip(),
+    # Augmentation params
+    crop_min_scale = getattr(cfg, "aug_crop_min_scale", 0.6)
+    crop_max_scale = getattr(cfg, "aug_crop_max_scale", 1.0)
+    crop_min_ratio = getattr(cfg, "aug_crop_min_ratio", 0.75)
+    crop_max_ratio = getattr(cfg, "aug_crop_max_ratio", 1.33)
 
-        # RandAugment: extra color / geometric jitter
-        transforms.RandAugment(num_ops=2, magnitude=9),
+    rand_num_ops = getattr(cfg, "aug_rand_num_ops", 2)
+    rand_magnitude = getattr(cfg, "aug_rand_magnitude", 9)
 
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
+    erase_prob = getattr(cfg, "aug_erase_prob", 0.1)
+    erase_min_scale = getattr(cfg, "aug_erase_min_scale", 0.02)
+    erase_max_scale = getattr(cfg, "aug_erase_max_scale", 0.33)
+    erase_min_ratio = getattr(cfg, "aug_erase_min_ratio", 0.3)
+    erase_max_ratio = getattr(cfg, "aug_erase_max_ratio", 3.3)
 
-        # Random erasing on some images (very good for ViT)
-        transforms.RandomErasing(p=0.1, scale=(0.02, 0.33), ratio=(0.3, 3.3)),
-    ])
+    train_tf = transforms.Compose(
+        [
+            # more diverse crops (zoom in/out, slight aspect changes)
+            transforms.RandomResizedCrop(
+                image_size,
+                scale=(crop_min_scale, crop_max_scale),
+                ratio=(crop_min_ratio, crop_max_ratio),
+            ),
+            transforms.RandomHorizontalFlip(),
+            # RandAugment: extra color / geometric jitter
+            transforms.RandAugment(num_ops=rand_num_ops, magnitude=rand_magnitude),
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std),
+            # Random erasing on some images (very good for ViT)
+            transforms.RandomErasing(
+                p=erase_prob,
+                scale=(erase_min_scale, erase_max_scale),
+                ratio=(erase_min_ratio, erase_max_ratio),
+            ),
+        ]
+    )
 
-    eval_tf = transforms.Compose([
-        transforms.Resize((image_size, image_size)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
-    ])
+    eval_tf = transforms.Compose(
+        [
+            transforms.Resize((image_size, image_size)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean, std),
+        ]
+    )
 
     # Base dataset (no transform yet)
     base_train = datasets.ImageFolder(os.path.join(root, "train"), transform=None)
@@ -148,19 +171,40 @@ def get_data_loaders(cfg):
     val_ds = TransformSubset(base_train, val_subset.indices, transform=eval_tf)
 
     # Test from val/ folder
-    test_ds = TinyImageNetVal(root, class_to_idx=base_train.class_to_idx, transform=eval_tf)
+    test_ds = TinyImageNetVal(
+        root, class_to_idx=base_train.class_to_idx, transform=eval_tf
+    )
 
     # DataLoaders
-    train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True,
-                              num_workers=cfg.num_workers, pin_memory=pin_memory, persistent_workers=persistent_workers, drop_last=True)
-    val_loader = DataLoader(val_ds, batch_size=cfg.batch_size, shuffle=False,
-                            num_workers=cfg.num_workers, pin_memory=pin_memory, persistent_workers=persistent_workers)
-    test_loader = DataLoader(test_ds, batch_size=cfg.batch_size, shuffle=False,
-                             num_workers=cfg.num_workers, pin_memory=pin_memory, persistent_workers=persistent_workers)
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=cfg.batch_size,
+        shuffle=True,
+        num_workers=cfg.num_workers,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers,
+        drop_last=True,
+    )
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=cfg.batch_size,
+        shuffle=False,
+        num_workers=cfg.num_workers,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers,
+    )
+    test_loader = DataLoader(
+        test_ds,
+        batch_size=cfg.batch_size,
+        shuffle=False,
+        num_workers=cfg.num_workers,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers,
+    )
     print(
-            f"Samples -> Train: {len(train_ds)}, Val: {len(val_ds)}, Test: {len(test_ds)}, Classes: {len(base_train.class_to_idx)}"
-        )
+        f"Samples -> Train: {len(train_ds)}, Val: {len(val_ds)}, Test: {len(test_ds)}, Classes: {len(base_train.class_to_idx)}"
+    )
     print(
-            f"Batches -> Train: {len(train_loader)}, Val: {len(val_loader)}, Test: {len(test_loader)}"
-        )
+        f"Batches -> Train: {len(train_loader)}, Val: {len(val_loader)}, Test: {len(test_loader)}"
+    )
     return train_loader, val_loader, test_loader

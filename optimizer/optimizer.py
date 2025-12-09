@@ -82,7 +82,7 @@ def get_optimizer(model, cfg):
                         "weight_decay": cfg.weight_decay,
                     }
                 ],
-                lr=cfg.max_scheduler_lr,
+                lr=cfg.scheduler_max_lr,
             )
 
         # Hook to update that param after grad accumulation

@@ -8,7 +8,9 @@ from transformers.activations import ACT2FN
 
 
 class ColaMDownProjLayer(nn.Module):
-    def __init__(self, in_features, rank, lr_act=True, lr_act_type="silu"):
+    def __init__(
+        self, in_features, out_features, rank, lr_act=True, lr_act_type="silu"
+    ):
         super().__init__()
         self.rank = rank
         if lr_act:
@@ -16,7 +18,10 @@ class ColaMDownProjLayer(nn.Module):
 
         # Initialization based on paper's logic to maintain variance
         # "target_sdv" acts as a scaling factor
-        self.cola_a = nn.Parameter(torch.randn(in_features, rank) / (rank**0.25))
+        target_sdv = (in_features + out_features) ** (-1 / 2)
+        self.cola_a = nn.Parameter(
+            torch.randn(in_features, rank) / (rank**0.25) * (target_sdv**0.5)
+        )
 
     def forward(self, x):
         out = torch.matmul(x, self.cola_a)
@@ -26,9 +31,13 @@ class ColaMDownProjLayer(nn.Module):
 
 
 class ColaMUpProjLayer(nn.Module):
-    def __init__(self, out_features, rank, bias=True):
+    def __init__(self, in_features, out_features, rank, bias=True):
         super().__init__()
-        self.cola_b = nn.Parameter(torch.randn(rank, out_features) / (rank**0.25))
+
+        target_sdv = (in_features + out_features) ** (-1 / 2)
+        self.cola_b = nn.Parameter(
+            torch.randn(rank, out_features) / (rank**0.25) * (target_sdv**0.5)
+        )
 
         if bias:
             self.bias = nn.Parameter(torch.zeros(out_features))
@@ -44,6 +53,7 @@ class ColaMUpProjLayer(nn.Module):
 
 # --- The Main CoLA-M Wrapper ---
 # TODO: make sure everything good
+
 
 class ColaLinear(nn.Module):
     """
@@ -65,11 +75,17 @@ class ColaLinear(nn.Module):
 
         # Down Projection (A) + Activation
         self.down = ColaMDownProjLayer(
-            in_features=in_features, rank=rank, lr_act=True, lr_act_type=lr_act_type
+            in_features=in_features,
+            out_features=out_features,
+            rank=rank,
+            lr_act=True,
+            lr_act_type=lr_act_type,
         )
 
         # Up Projection (B) + Bias
-        self.up = ColaMUpProjLayer(out_features=out_features, rank=rank, bias=bias)
+        self.up = ColaMUpProjLayer(
+            in_features=in_features, out_features=out_features, rank=rank, bias=bias
+        )
 
     def forward(self, x):
         # 1. Compute Low-Rank Activations (The "Bottleneck")

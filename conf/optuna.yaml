@@ -1,14 +1,17 @@
-
 optuna:
   study_name: "vit_hpo"
-  direction: "maximize"  # maximize accuracy
+  direction: "minimize"  # Changed from maximize to minimize val_loss
   n_trials: 50
   n_jobs: 1
   sampler: "tpe"  # Tree-structured Parzen Estimator
-  n_warmup_steps: 30
+  
+  # Pruner configuration
+  n_warmup_steps: 10    # Don't prune the first 10 epochs of any trial
+  early_stopping_patience: 30
 
   search_space:
-    # 1. Core optimization (around your working values)
+    # cola_rank_ratio: [0, 1] 
+
     scheduler_max_lr: [1e-4, 6e-4]    # you liked 3e-4 → center the range here
     weight_decay: [0.02, 0.12]     # around your 0.06 (DeiT-like region)
 
@@ -20,3 +23,5 @@ optuna:
     mixup_alpha: [0.0, 0.30]       # 0.0 = off; 0.1–0.2 typical
     cutmix_alpha: [0.0, 0.20]      # 0.0 = off; keep lower than mixup
     mix_prob: [0.0, 0.70]
+
+    
