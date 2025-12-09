@@ -1,6 +1,5 @@
 from transformers import ViTConfig, ViTForImageClassification
 
-from model.v1_cola_model import ColaViTConfig, ColaViTForImageClassification
 from model.v2_cola_model import convert_vit_to_cola_m
 
 
@@ -20,15 +19,6 @@ def build_model(cfg):
     if cfg.model_name == "vit":
         vit = ViTForImageClassification(vit_config)
         return vit
-    elif cfg.model_name == "v1_cola":
-        cola = ColaViTForImageClassification(
-            config=ColaViTConfig(
-                cola_rank_ratio=cfg.cola_rank_ratio,
-                lr_act_type=cfg.cola_lr_act_type,
-                **vit_config.to_dict(),  # Inherit all standard args
-            )
-        )
-        return cola
     elif cfg.model_name == "v2_cola":
         v2_cola = ViTForImageClassification(vit_config)
         v2_cola = convert_vit_to_cola_m(v2_cola, rank_ratio=cfg.cola_rank_ratio)
