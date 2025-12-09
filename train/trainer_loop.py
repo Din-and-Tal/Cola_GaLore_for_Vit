@@ -24,17 +24,11 @@ def train_loop(trainer, trial):
 
     for epoch in range(num_epochs):
         epoch_start = time.time()
-        print(
-            f"\n[Epoch {epoch}/{num_epochs}] Training on {len(trainer.loaders.train)} batches..."
-        )
         train_loss, train_acc = epoch_step(
             trainer, trainer.loaders.train, True, cfg.full_train
         )
 
         if run_eval:
-            print(
-                f"[Epoch {epoch}/{num_epochs}] Validating on {len(trainer.loaders.val)} batches..."
-            )
             val_loss, val_acc = epoch_step(
                 trainer, trainer.loaders.val, False, cfg.full_train
             )
@@ -46,6 +40,15 @@ def train_loop(trainer, trial):
             else:
                 patience_counter += 1
 
+            # ----- Optuna Pruning -----
+            if trial is not None:
+                trial.report(val_loss, epoch)  # Report loss instead of acc
+                if trial.should_prune():
+                    print(
+                        f"[Epoch {epoch}] Trial pruned by Optuna (val_acc={val_acc:.2f})"
+                    )
+                    raise optuna.exceptions.TrialPruned()
+
             if (
                 early_stopping_patience > 0
                 and patience_counter >= early_stopping_patience
@@ -55,26 +58,8 @@ def train_loop(trainer, trial):
                 )
                 break
 
-            # ----- Optuna Pruning -----
-            if trial is not None:
-                trial.report(val_loss, epoch)  # Report loss instead of acc
-                if trial.should_prune():
-                    raise optuna.exceptions.TrialPruned()
-
         else:
             val_loss, val_acc = 0.0, 0.0
-
-        # ---------- HERE: report to Optuna & prune ----------
-        if trial is not None and run_eval:
-            # step = epoch (you can also use epoch+1, doesn't matter as long as consistent)
-            trial.report(val_acc, step=epoch)
-
-            # If the trial should be pruned, raise the exception
-            if trial.should_prune():
-                print(f"[Epoch {epoch}] Trial pruned by Optuna (val_acc={val_acc:.2f})")
-                import optuna
-                raise optuna.exceptions.TrialPruned()
-        # --------------------------------------------------------
 
         trainer.scheduler.step()
         lr = trainer.optimizer.param_groups[0]["lr"]
@@ -101,7 +86,6 @@ def train_loop(trainer, trial):
 
     # Final test
     if run_eval:
-        print(f"\n[Final] Testing on {len(trainer.loaders.test)} batches...")
         _, test_acc = epoch_step(trainer, trainer.loaders.test, False, cfg.full_train)
     else:
         test_acc = 0.0
@@ -153,8 +137,6 @@ def epoch_step(trainer, loader, is_training, full_train=True):
                     )
                 else:
                     loss = loss_fn(outputs, targets)
-
-
 
             # ----- AMP backward + step -----
             if scaler.is_enabled():
