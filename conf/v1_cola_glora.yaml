@@ -4,4 +4,3 @@
     
     model_name: 'v1_cola'
     optimizer_name: "galore8"  # 'adamw', 'galore8', 'galore8_per_layer'
-    compile_model: false

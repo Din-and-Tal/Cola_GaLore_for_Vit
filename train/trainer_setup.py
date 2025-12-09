@@ -54,9 +54,6 @@ class Trainer:
             gamma=cfg.scheduler_gamma,
         )
 
-        if getattr(cfg, "compile_model", False):
-            self.model = torch.compile(self.model)
-
         # 5. Wandb Initialization
 
         if cfg.use_wandb:

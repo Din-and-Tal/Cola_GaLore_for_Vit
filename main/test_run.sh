@@ -16,5 +16,5 @@ set -e # terminates consecutive calls when error occurs
 
 for config in "${config_names[@]}"; do
     echo "Running with config: $config"
-    python main/main.py --config-name $config compile_model=false full_train=false
+    python main/main.py --config-name $config full_train=false
 done

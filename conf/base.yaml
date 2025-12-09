@@ -10,7 +10,6 @@ size: tiny
 profile_memory: false
 num_workers: 4
 use_amp: true
-compile_model: false # DELETE LATYER TODO
 
 seed: 42
 
