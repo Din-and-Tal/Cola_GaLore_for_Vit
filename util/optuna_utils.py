@@ -1,12 +1,12 @@
 import optuna
-from optuna.pruners import MedianPruner, PatientPruner
+from optuna.pruners import SuccessiveHalvingPruner, PatientPruner
 from optuna.samplers import TPESampler
 
 
 def create_optuna_study(config) -> optuna.Study:
     sampler = TPESampler(seed=config.seed)
 
-    pruner = MedianPruner(n_warmup_steps=config.optuna.n_warmup_steps)
+    pruner = SuccessiveHalvingPruner(min_resource=config.optuna.n_warmup_steps, reduction_factor=3)
     if "early_stopping_patience" in config.optuna:
         pruner = PatientPruner(pruner, patience=config.optuna.early_stopping_patience)
 
