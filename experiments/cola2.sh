@@ -8,9 +8,7 @@ config_names=(
     # "v2_cola_adamw"
     # "v2_cola_glora"
     # "v2_cola_glora_layer"
-    # "v1_cola_adamw"
-    # "v1_cola_glora"
-    # "v1_cola_glora_layer"
+
 )
 
 for config in "${config_names[@]}"; do
