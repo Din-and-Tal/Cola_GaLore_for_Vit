@@ -20,10 +20,6 @@ def train_loop(trainer, trial):
     run_eval = cfg.full_train
 
     print("\nStarting training...")
-    print(f"Training batches: {len(trainer.loaders.train)}")
-    if run_eval:
-        print(f"Validation batches: {len(trainer.loaders.val)}")
-        print(f"Test batches: {len(trainer.loaders.test)}")
     start_time = time.time()
 
     for epoch in range(num_epochs):
@@ -43,6 +39,15 @@ def train_loop(trainer, trial):
                 patience_counter = 0
             else:
                 patience_counter += 1
+                
+            # ----- Optuna Pruning -----
+            if trial is not None:
+                trial.report(val_loss, epoch)  # Report loss instead of acc
+                if trial.should_prune():
+                    print(
+                        f"[Epoch {epoch}] Trial pruned by Optuna (val_acc={val_acc:.2f})"
+                    )
+                    raise optuna.exceptions.TrialPruned()
 
             if (
                 early_stopping_patience > 0
@@ -52,12 +57,6 @@ def train_loop(trainer, trial):
                     f"\n[Early Stopping] Triggered after {patience_counter} epochs without improvement."
                 )
                 break
-
-            # ----- Optuna Pruning -----
-            if trial is not None:
-                trial.report(val_loss, epoch)  # Report loss instead of acc
-                if trial.should_prune():
-                    raise optuna.exceptions.TrialPruned()
 
         else:
             val_loss, val_acc = 0.0, 0.0
