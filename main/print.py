@@ -8,8 +8,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from model.cola_model import convert_vit_to_cola_m
 
-
-
 @hydra.main(version_base=None, config_path="../conf", config_name="vit_adamw")
 def main(cfg):
     # Build ViT model using Hugging Face transformers to mirror model.py style

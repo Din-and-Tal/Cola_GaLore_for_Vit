@@ -10,7 +10,6 @@ from util.dataloader import get_data_loaders
 from util.model import build_model
 from util.scheduler import CosineAnnealingWarmupRestarts
 
-
 class Trainer:
     """
     Trainer class to manage model training, validation, and testing.
@@ -25,7 +24,7 @@ class Trainer:
         self.loss_func = None
         self.scheduler = None
         self.loaders = SimpleNamespace(train=None, val=None, test=None)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.scaler = torch.GradScaler(
             enabled=getattr(cfg, "use_amp", False) and self.device == "cuda"
         )
@@ -76,7 +75,7 @@ class Trainer:
 
             self.wandb = wandb.init(
                 project=project_name,
-                name=f"{cfg.cola_rank_ratio}_{cfg.size}_{cfg.config_name}",
+                name=f"{cfg.size}_{cfg.config_name}",
                 entity=cfg.wandb_team_name,
                 config=config_dict,
             )

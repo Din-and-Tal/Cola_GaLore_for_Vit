@@ -1,7 +1,6 @@
 from model.cola_model import convert_vit_to_cola_m
 from transformers import ViTConfig, ViTForImageClassification
 
-
 def build_model(cfg):
     vit_config = ViTConfig(
         image_size=cfg.image_size,

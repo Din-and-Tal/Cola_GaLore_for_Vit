@@ -5,7 +5,6 @@ import torch
 
 from train.trainer_utils import apply_mixup_cutmix
 
-
 def train_loop(trainer, trial):
     """Run full training using the Trainer object."""
     cfg = trainer.cfg

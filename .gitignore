@@ -1,9 +1,7 @@
 __pycache__
+.vscode
+.idea
 wandb
 datasets
-saved_models
 outputs
-.vscode
 helpers
-.idea
-model/cola_layer.py
