@@ -2,8 +2,13 @@ import torch.nn as nn
 
 from model.v2_cola_layer import ColaLinear
 
-
-def convert_vit_to_cola_m(model, rank_ratio=0.25, verbose=False):
+def convert_vit_to_cola_m(
+    model,
+    intermediate_rank_scale,
+    intermediate_size,
+    verbose=False,
+    rank_ratio=0.25,
+):
     """
     Recursively replaces nn.Linear layers in a ViT model with ColaLinear layers.
 
@@ -13,7 +18,12 @@ def convert_vit_to_cola_m(model, rank_ratio=0.25, verbose=False):
     """
 
     # We define a recursive function to traverse the model
-    def replace_linear_with_cola(module, name_prefix=""):
+    def replace_linear_with_cola(
+        module,
+        intermediate_rank_scale,
+        intermediate_size,
+        name_prefix="",
+    ):
         for name, child in module.named_children():
             full_name = f"{name_prefix}.{name}" if name_prefix else name
 
@@ -36,6 +46,11 @@ def convert_vit_to_cola_m(model, rank_ratio=0.25, verbose=False):
 
                 # Use the smaller dimension to calculate rank to ensure compression
                 base_dim = min(in_feat, out_feat)
+
+                if "intermediate.dense" in full_name and intermediate_rank_scale:
+                    print('a')
+                    base_dim = intermediate_size
+
                 rank = max(1, int(base_dim * rank_ratio))
 
                 if verbose:
@@ -57,7 +72,13 @@ def convert_vit_to_cola_m(model, rank_ratio=0.25, verbose=False):
 
             else:
                 # Recurse deeper
-                replace_linear_with_cola(child, full_name)
+                replace_linear_with_cola(module=child,
+                                         intermediate_rank_scale=intermediate_rank_scale,
+                                         intermediate_size=intermediate_size,
+                                         name_prefix=full_name)
 
-    replace_linear_with_cola(model)
+    replace_linear_with_cola(module=model,
+                                         intermediate_rank_scale=intermediate_rank_scale,
+                                         intermediate_size=intermediate_size,
+                                         )
     return model

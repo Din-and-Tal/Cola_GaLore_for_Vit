@@ -14,6 +14,7 @@ def build_model(cfg):
         num_attention_heads=cfg.num_attention_heads,
         intermediate_size=cfg.intermediate_size,
         hidden_dropout_prob=cfg.hidden_dropout_prob,
+        hidden_act=cfg.hidden_act,
     )
 
     if cfg.model_name == "vit":
@@ -22,7 +23,12 @@ def build_model(cfg):
 
     elif cfg.model_name == "v2_cola":
         v2_cola = ViTForImageClassification(vit_config)
-        v2_cola = convert_vit_to_cola_m(v2_cola, rank_ratio=cfg.cola_rank_ratio)
+        v2_cola = convert_vit_to_cola_m(
+            model=v2_cola,
+            intermediate_rank_scale=cfg.intermediate_rank_scale,
+            intermediate_size=cfg.intermediate_size,
+            rank_ratio=cfg.cola_rank_ratio,
+        )
         return v2_cola
 
     raise ValueError("bad model name, ")

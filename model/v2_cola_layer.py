@@ -3,22 +3,17 @@ import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 from transformers.activations import ACT2FN
 
-# --- Paste your provided classes here (ColaMDownProjLayer, ColaMUpProjLayer) ---
-# I have slightly modified them to ensure they pass arguments correctly within the wrapper
-
 
 class ColaMDownProjLayer(nn.Module):
     def __init__(
         self, in_features, out_features, rank, lr_act=True, lr_act_type="silu"
     ):
         super().__init__()
-        self.rank = rank
+
         if lr_act:
             self.lr_act = ACT2FN[lr_act_type]
 
-        # Initialization based on paper's logic to maintain variance
-        # "target_sdv" acts as a scaling factor
-        target_sdv = (in_features + out_features) ** (-1 / 2)
+        target_sdv = (in_features + out_features) ** (-0.5)
         self.cola_a = nn.Parameter(
             torch.randn(in_features, rank) / (rank**0.25) * (target_sdv**0.5)
         )
@@ -40,7 +35,9 @@ class ColaMUpProjLayer(nn.Module):
         )
 
         if bias:
-            self.bias = nn.Parameter(torch.zeros(out_features))
+            stdv = 1.0 / out_features ** (1 / 2)
+            self.bias = torch.nn.Parameter(torch.randn(out_features))
+            self.bias.data.uniform_(-stdv, stdv)
         else:
             self.register_parameter("bias", None)
 
@@ -49,10 +46,6 @@ class ColaMUpProjLayer(nn.Module):
         if self.bias is not None:
             out += self.bias
         return out
-
-
-# --- The Main CoLA-M Wrapper ---
-# TODO: make sure everything good
 
 
 class ColaLinear(nn.Module):
@@ -73,7 +66,6 @@ class ColaLinear(nn.Module):
         super().__init__()
         self.use_checkpointing = use_checkpointing
 
-        # Down Projection (A) + Activation
         self.down = ColaMDownProjLayer(
             in_features=in_features,
             out_features=out_features,
@@ -82,22 +74,16 @@ class ColaLinear(nn.Module):
             lr_act_type=lr_act_type,
         )
 
-        # Up Projection (B) + Bias
         self.up = ColaMUpProjLayer(
             in_features=in_features, out_features=out_features, rank=rank, bias=bias
         )
 
     def forward(self, x):
-        # 1. Compute Low-Rank Activations (The "Bottleneck")
-        # According to the paper, this is the cached activation for CoLA-M
+
         low_rank_act = self.down(x)
 
-        # 2. Compute Up-Projection
-        # CoLA-M: Use checkpointing here.
-        # We drop the intermediate graph of the 'up' layer to save memory
-        # and recompute it during backward pass.
         if self.training and self.use_checkpointing and x.requires_grad:
-            output = checkpoint(self.up, low_rank_act, use_reentrant=False)
+            output = checkpoint(self.up, low_rank_act, use_reentrant=True,preserve_rng_state =False)
         else:
             output = self.up(low_rank_act)
 

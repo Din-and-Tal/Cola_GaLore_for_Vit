@@ -77,7 +77,7 @@ class Trainer:
 
             self.wandb = wandb.init(
                 project=project_name,
-                name=f"{cfg.size}_{cfg.config_name}",
+                name=f"{cfg.cola_rank_ratio}_{cfg.size}_{cfg.config_name}",
                 entity=cfg.wandb_team_name,
                 config=config_dict,
             )
