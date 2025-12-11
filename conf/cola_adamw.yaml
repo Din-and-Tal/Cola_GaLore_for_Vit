@@ -2,5 +2,5 @@
     - base
     - _self_
     
-    model_name: 'v2_cola'
+    model_name: 'cola'
     optimizer_name: "adamw"  # 'adamw', 'galore8', 'galore8_per_layer'

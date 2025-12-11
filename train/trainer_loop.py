@@ -39,7 +39,7 @@ def train_loop(trainer, trial):
                 patience_counter = 0
             else:
                 patience_counter += 1
-
+                
             # ----- Optuna Pruning -----
             if trial is not None:
                 trial.report(val_loss, epoch)  # Report loss instead of acc
@@ -63,14 +63,14 @@ def train_loop(trainer, trial):
 
         trainer.scheduler.step()
         lr = trainer.optimizer.param_groups[0]["lr"]
-
-        print(
-            f"Summary Ep {epoch}: "
-            f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}% | "
-            f"LR: {lr:.2e} | "
-            f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}% | "
-            f"Epoch time: {time.time() - epoch_start:.2f}s"
-        )
+        if cfg.verbose:
+            print(
+                f"Summary Ep {epoch}: "
+                f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}% | "
+                f"LR: {lr:.2e} | "
+                f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}% | "
+                f"Epoch time: {time.time() - epoch_start:.2f}s"
+            )
 
         # Wandb logging
         if trainer.wandb:

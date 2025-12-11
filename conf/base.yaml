@@ -1,13 +1,12 @@
 defaults:
   - _self_
   - optuna
-
 use_optuna: true
 use_wandb: true
 
+lr_act_type: "silu"
 full_train: true
 size: tiny
-profile_memory: false
 num_workers: 4
 use_amp: true
 
@@ -22,18 +21,19 @@ num_channels: 3
 
 cola_rank_ratio: 0.25
 cola_lr_act_type: "gelu"
+use_intermediate_rank_scale: false
 
 glora_rank: 128
 glora_update_proj_gap: 200
 glora_scale: 0.25
 glora_proj_type: "std"
 
-num_epochs: 300
+num_epochs: 150
 batch_size: 512
 weight_decay: 0.06
 warmup_epochs: 5
 max_grad_norm: 1.0
-early_stopping_patience: 30
+early_stopping_patience: -1
 
 hidden_dropout_prob: 0.2
 label_smoothing: 0.1
@@ -68,6 +68,8 @@ wandb_project_name: "tiny-imagenet"
 wandb_team_name: "din-alon-technion-israel-institute-of-technology"
 
 config_name: ${hydra:job.config_name}
+verbose: false
+
 
 vit_presents:
   tiny:
@@ -99,7 +101,6 @@ vit_presents:
     num_hidden_layers: 32
     num_attention_heads: 16
     intermediate_size: 5120
-    total_params: 632_000_000
 
 hidden_size: ${vit_presents.${size}.hidden_size}
 num_hidden_layers: ${vit_presents.${size}.num_hidden_layers}
