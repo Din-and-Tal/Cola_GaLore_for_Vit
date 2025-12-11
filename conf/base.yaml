@@ -3,8 +3,8 @@ defaults:
   - optuna
 use_optuna: true
 use_wandb: true
-#TODO: check about activiation and print model to verify activitions
-# hidden_act = 'silu'
+
+lr_act_type: "silu"
 full_train: true
 size: tiny
 profile_memory: false
@@ -22,7 +22,7 @@ num_channels: 3
 
 cola_rank_ratio: 0.25
 cola_lr_act_type: "gelu"
-intermediate_rank_scale: false
+use_intermediate_rank_scale: false
 
 glora_rank: 128
 glora_update_proj_gap: 200
@@ -69,7 +69,7 @@ wandb_project_name: "tiny-imagenet"
 wandb_team_name: "din-alon-technion-israel-institute-of-technology"
 
 config_name: ${hydra:job.config_name}
-
+verbose: false
 
 
 vit_presents:

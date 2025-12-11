@@ -1,6 +1,5 @@
+from model.cola_model import convert_vit_to_cola_m
 from transformers import ViTConfig, ViTForImageClassification
-
-from model.v2_cola_model import convert_vit_to_cola_m
 
 
 def build_model(cfg):
@@ -14,21 +13,21 @@ def build_model(cfg):
         num_attention_heads=cfg.num_attention_heads,
         intermediate_size=cfg.intermediate_size,
         hidden_dropout_prob=cfg.hidden_dropout_prob,
-        hidden_act=cfg.hidden_act,
     )
 
     if cfg.model_name == "vit":
         vit = ViTForImageClassification(vit_config)
         return vit
 
-    elif cfg.model_name == "v2_cola":
-        v2_cola = ViTForImageClassification(vit_config)
-        v2_cola = convert_vit_to_cola_m(
-            model=v2_cola,
-            intermediate_rank_scale=cfg.intermediate_rank_scale,
+    elif cfg.model_name == "cola":
+        cola = ViTForImageClassification(vit_config)
+        cola = convert_vit_to_cola_m(
+            model=cola,
+            use_intermediate_rank_scale=cfg.use_intermediate_rank_scale,
             intermediate_size=cfg.intermediate_size,
             rank_ratio=cfg.cola_rank_ratio,
+            lr_act_type=cfg.lr_act_type
         )
-        return v2_cola
+        return cola
 
     raise ValueError("bad model name, ")
