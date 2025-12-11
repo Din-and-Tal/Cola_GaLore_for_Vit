@@ -7,7 +7,6 @@ from optimizer.optimizer import get_optimizer
 from train.trainer_loop import train_loop
 from train.trainer_utils import set_seed, validate_trainer_initialization
 from util.dataloader import get_data_loaders
-from util.memory_record import profile_memory
 from util.model import build_model
 from util.scheduler import CosineAnnealingWarmupRestarts
 
@@ -82,19 +81,6 @@ class Trainer:
                 config=config_dict,
             )
 
-        # 6. run one profiling pass to get HTML memory timeline
-        if getattr(cfg, "profile_memory", False):
-            run_name = f"{self.cfg.model_name}_{self.cfg.optimizer_name}_{self.cfg.dataset_name}"
-            profile_memory(
-                model=self.model,
-                optimizer=self.optimizer,
-                loss_fn=self.loss_func,
-                loader=self.loaders.train,
-                num_iters=5,
-                device=self.device,
-                run_name=run_name,
-                wandb_run=self.wandb if self.wandb is not None else None,
-            )
 
         # Check that nothing is None
         validate_trainer_initialization(self)
