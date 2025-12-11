@@ -10,7 +10,6 @@ from util.dataloader import get_data_loaders
 from util.model import build_model
 from util.scheduler import CosineAnnealingWarmupRestarts
 
-
 class Trainer:
     """
     Trainer class to manage model training, validation, and testing.

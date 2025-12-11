@@ -2,11 +2,11 @@
 
 config_names=(
     "vit_adamw"
-    "vit_glora"
-    "vit_glora_layer"
+    # "vit_glora"
+    # "vit_glora_layer"
     "cola_adamw"
-    "cola_glora"
-    "cola_glora_layer"
+    # "cola_glora"
+    # "cola_glora_layer"
 
 )
 
