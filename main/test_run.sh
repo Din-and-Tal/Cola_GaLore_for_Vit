@@ -7,7 +7,6 @@ config_names=(
     "cola_adamw"
     # "cola_glora"
     # "cola_glora_layer"
-
 )
 
 set -e # terminates consecutive calls when error occurs

@@ -12,7 +12,7 @@ config_names=(
 )
 
 cola_rank_ratios=(0.1 0.25 0.4 0.5 0.75 0.9 1)
-# tal: 9.33h
+# tal: 14h
 # din: 12.5h
 for config in "${config_names[@]}"; do
     for ratio in "${cola_rank_ratios[@]}"; do
