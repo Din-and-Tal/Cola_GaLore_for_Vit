@@ -49,8 +49,6 @@ class Trainer:
         # 5. Wandb Initialization
         if cfg.use_wandb:
             project_name = "test_runs" if not cfg.full_train else cfg.wandb_project_name
-            # TODO: override
-            project_name = "cola_checkpointing"
             # Convert config to dict to save all parameters individually
             config_dict = {}
             for key in dir(cfg):
@@ -69,7 +67,7 @@ class Trainer:
             elif "galore" in cfg.optimizer_name:
                 extra_name += f"_gr={cfg.galore_rank}_T={cfg.galore_update_proj_gap}_s={cfg.galore_scale}"
                 
-            test_and_bug = f"big:{int(cfg.big_checkpointing)}_small:{int(cfg.cola_use_checkpointing)}"
+            test_and_bug = f""
             model_name = 'cola' if cfg.use_cola else 'vit'
             run_name= f"{cfg.size}_{model_name}_{cfg.optimizer_name}{extra_name}{test_and_bug}"
             self.wandb = wandb.init(

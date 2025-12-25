@@ -14,7 +14,7 @@ def train_loop(trainer, trial):
     early_stopping_patience = -1 if cfg.use_optuna else cfg.early_stopping_patience
 
     # Limit training when full_train is False
-    num_epochs = cfg.num_epochs if cfg.full_train else 2
+    num_epochs = cfg.num_epochs if cfg.full_train else 5
 
     print("\nStarting training...")
     start_time = time.time()
@@ -59,8 +59,7 @@ def train_loop(trainer, trial):
         else:
             trainer.scheduler.step()
             lr = trainer.optimizer.param_groups[0]["lr"]        
-
-            epoch_time = time.time() - start_time
+            
         if cfg.verbose:
             print(
                 f"Summary Ep {epoch}: "
@@ -113,8 +112,8 @@ def epoch_step(trainer, loader, is_training, full_train=True):
     model.train() if is_training else model.eval()
 
     for batch_idx, (inputs, targets) in enumerate(loader):
-        # if not full_train and batch_idx>0:
-        #     break
+        if not full_train and batch_idx>3:
+            break
             
         inputs = inputs.to(device, non_blocking=True)
         targets = targets.to(device, non_blocking=True)

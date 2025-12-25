@@ -78,11 +78,15 @@ class ColaLinear(nn.Module):
 
     def forward(self, x):
         # low_rank_act = self.down(x)
-        #
-        # #
-        # # if self.training and self.cola_use_checkpointing and x.requires_grad:
-        # #     output = checkpoint(self.up, low_rank_act, use_reentrant=True,preserve_rng_state =False)
-        # # else:
-        # output = self.up(low_rank_act)
-
+        # def layer(x):
+        #     return self.up(self.down(x))
+        # def up_only(low_rank_act):
+        #     return self.up(low_rank_act)
+            
+        # if self.training and self.cola_use_checkpointing and x.requires_grad:
+        #     output = checkpoint(
+        #         layer, x, use_reentrant=True, preserve_rng_state=False
+        #     )
+        # else:
+    #TODO: checkpointing
         return self.up(self.down(x))
