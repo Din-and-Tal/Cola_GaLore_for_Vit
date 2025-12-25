@@ -2,7 +2,7 @@ defaults:
   - _self_
   - optuna
 
-use_profiler: false
+use_profiler: true
 use_bf16: true
 use_activation_checkpointing: false
 

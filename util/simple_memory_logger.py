@@ -1,6 +1,8 @@
 # util/simple_memory_logger.py
 import torch
 
+from util.model import build_model
+
 
 def _mem_gb(device: torch.device) -> float:
     return torch.cuda.memory_allocated(device) / 1024**3
@@ -28,9 +30,9 @@ def measure_memory_breakdown(model,cfg, optimizer, loss_fn, loader, device="cuda
 
     device = torch.device(device)
     if cfg.use_bf16:
-        self.model = build_model(cfg).to(self.device, dtype=torch.bfloat16)
+        model = build_model(cfg).to(device, dtype=torch.bfloat16)
     else:
-        self.model = build_model(cfg).to(self.device)
+        model = build_model(cfg).to(device)
 
     model.train()
 
