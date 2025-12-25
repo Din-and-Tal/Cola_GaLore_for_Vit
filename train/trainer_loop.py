@@ -60,6 +60,7 @@ def train_loop(trainer, trial):
             trainer.scheduler.step()
             lr = trainer.optimizer.param_groups[0]["lr"]        
             
+        epoch_time = time.time() - start_time
         if cfg.verbose:
             print(
                 f"Summary Ep {epoch}: "
