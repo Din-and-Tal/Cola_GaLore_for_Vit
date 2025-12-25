@@ -1,6 +1,7 @@
     defaults:
     - base
     - _self_
-    
+
     use_cola: false
-    optimizer_name: adamw
+    optimizer_name: galore_layer
+    

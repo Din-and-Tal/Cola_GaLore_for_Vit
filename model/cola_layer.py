@@ -5,13 +5,11 @@ from transformers.activations import ACT2FN
 
 
 class ColaMDownProjLayer(nn.Module):
-    def __init__(
-        self, in_features, out_features, rank, lr_act=True, lr_act_type="silu"
-    ):
+    def __init__(self, in_features, out_features, rank, lr_act=True, cola_act="silu"):
         super().__init__()
 
         if lr_act:
-            self.lr_act = ACT2FN[lr_act_type]
+            self.lr_act = ACT2FN[cola_act]
 
         target_sdv = (in_features + out_features) ** (-0.5)
         self.cola_a = nn.Parameter(
@@ -60,18 +58,18 @@ class ColaLinear(nn.Module):
         out_features,
         rank,
         bias=True,
-        lr_act_type="silu",
-        use_checkpointing=True,
+        cola_act="silu",
+        cola_use_checkpointing=True,
     ):
         super().__init__()
-        self.use_checkpointing = use_checkpointing
+        self.cola_use_checkpointing = cola_use_checkpointing
 
         self.down = ColaMDownProjLayer(
             in_features=in_features,
             out_features=out_features,
             rank=rank,
             lr_act=True,
-            lr_act_type=lr_act_type,
+            cola_act=cola_act,
         )
 
         self.up = ColaMUpProjLayer(
@@ -79,12 +77,12 @@ class ColaLinear(nn.Module):
         )
 
     def forward(self, x):
+        # low_rank_act = self.down(x)
+        #
+        # #
+        # # if self.training and self.cola_use_checkpointing and x.requires_grad:
+        # #     output = checkpoint(self.up, low_rank_act, use_reentrant=True,preserve_rng_state =False)
+        # # else:
+        # output = self.up(low_rank_act)
 
-        low_rank_act = self.down(x)
-
-        if self.training and self.use_checkpointing and x.requires_grad:
-            output = checkpoint(self.up, low_rank_act, use_reentrant=True,preserve_rng_state =False)
-        else:
-            output = self.up(low_rank_act)
-
-        return output
+        return self.up(self.down(x))

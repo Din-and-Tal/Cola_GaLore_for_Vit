@@ -1,55 +1,56 @@
 defaults:
   - _self_
   - optuna
-use_optuna: false
-use_wandb: true
 
-lr_act_type: "silu"
+use_profiler: true
+
+big_checkpointing: false
+#use_activation_checkpointing: false
+
+optimizer_name: adamw #adamw , adamw8, galore, galore_layer
+use_wandb: true
+use_amp: false # TODO: integrate with galore
+use_optuna: false
+
 full_train: true
 size: tiny
 num_workers: 4
-use_amp: true
-
-seed: 42
-
-dataset_name: "tiny_imagenet"
-num_classes: 200
-
-image_size: 64
-patch_size: 8
-num_channels: 3
 
 cola_rank_ratio: 0.25
-cola_lr_act_type: "gelu"
-use_intermediate_rank_scale: false
+cola_act: "silu"
+cola_use_checkpointing: true
+cola_use_intermediate_rank_scale: false
 
-glora_rank: 128
-glora_update_proj_gap: 200
-glora_scale: 0.25
-glora_proj_type: "std"
+galore_rank: 128
+galore_update_proj_gap: 200
+galore_scale: 0.25
+galore_proj_type: "std"
+
+total_steps: -1 #this will be overriden in trainer setup
+
+early_stopping_patience: -1
 
 num_epochs: 150
 batch_size: 512
-weight_decay: 0.06
-warmup_epochs: 5
+weight_decay: 0.06 # 0.037343324638226455
 max_grad_norm: 1.0
-early_stopping_patience: -1
 
-hidden_dropout_prob: 0.2
-label_smoothing: 0.1
-scheduler_first_cycle_steps: ${num_epochs}
 scheduler_cycle_mult: 1.0
-scheduler_max_lr: 3e-4 # this value is initialized in all optimizers
+scheduler_max_lr: 3e-4  #0.00020545522334013431
 scheduler_min_lr: 1e-6
 scheduler_warmup_steps: 5
 scheduler_gamma: 1
+scheduler_warmup_pct: 0.02
+
+hidden_dropout_prob: 0.2 #0.0910218284106628
+
+label_smoothing: 0.1 #0.09740441812870372
 
 use_mixup: true
-mixup_alpha: 0.2   # small → won’t kill train_acc
-
+mixup_alpha: 0.2 #0.27067234802367746
 use_cutmix: true
-cutmix_alpha: 0.2  # small
-mix_prob: 0.2      # prob to apply mixup/cutmix on a batch
+cutmix_alpha: 0.2 #0.06735967157072321
+mix_prob: 0.2 #0.5440847747941563
 
 # Augmentation
 aug_crop_min_scale: 0.6
@@ -64,13 +65,24 @@ aug_erase_max_scale: 0.33
 aug_erase_min_ratio: 0.3
 aug_erase_max_ratio: 3.3
 
-wandb_project_name: "tiny-imagenet"
+seed: 42
+
+image_size: 64
+patch_size: 8
+num_channels: 3
+
+#tiny_imagenet, 200 classes
+# imagenette2, 10 classes
+dataset_name: "imagenette2"
+num_classes: 10
+
+wandb_project_name: "no_project_name"
 wandb_team_name: "din-alon-technion-israel-institute-of-technology"
 
 config_name: ${hydra:job.config_name}
-verbose: false
+verbose: true
 
-
+# model sizes --------------------------------------------
 vit_presents:
   tiny:
     hidden_size: 192

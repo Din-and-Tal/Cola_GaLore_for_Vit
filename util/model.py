@@ -1,5 +1,7 @@
-from model.cola_model import convert_vit_to_cola_m
 from transformers import ViTConfig, ViTForImageClassification
+
+from model.cola_model import convert_vit_to_cola_m
+
 
 def build_model(cfg):
     vit_config = ViTConfig(
@@ -14,19 +16,22 @@ def build_model(cfg):
         hidden_dropout_prob=cfg.hidden_dropout_prob,
     )
 
-    if cfg.model_name == "vit":
-        vit = ViTForImageClassification(vit_config)
-        return vit
-
-    elif cfg.model_name == "cola":
-        cola = ViTForImageClassification(vit_config)
-        cola = convert_vit_to_cola_m(
-            model=cola,
-            use_intermediate_rank_scale=cfg.use_intermediate_rank_scale,
+    model = None
+    if cfg.use_cola:
+        model = ViTForImageClassification(vit_config)
+        model = convert_vit_to_cola_m(
+            model=model,
+            cola_use_intermediate_rank_scale=cfg.cola_use_intermediate_rank_scale,
             intermediate_size=cfg.intermediate_size,
             rank_ratio=cfg.cola_rank_ratio,
-            lr_act_type=cfg.lr_act_type
+            cola_act=cfg.cola_act,
+            cola_use_checkpointing=cfg.cola_use_checkpointing,
         )
-        return cola
+        if cfg.big_checkpointing:
+            model.gradient_checkpointing_enable()
+            model.config.use_cache = False
+        print(f"DEBUG::::: {model.is_gradient_checkpointing}")
+    else:
+        model = ViTForImageClassification(vit_config)
 
-    raise ValueError("bad model name, ")
+    return model

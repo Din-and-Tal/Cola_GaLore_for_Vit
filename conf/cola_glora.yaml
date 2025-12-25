@@ -1,6 +1,0 @@
-    defaults:
-    - base
-    - _self_
-    
-    model_name: 'cola'
-    optimizer_name: "galore8"  # 'adamw', 'galore8', 'galore8_per_layer'

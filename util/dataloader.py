@@ -1,6 +1,7 @@
 import os
 import urllib.request
 import zipfile
+import tarfile
 from pathlib import Path
 
 import torch
@@ -15,6 +16,9 @@ PROJECT_BASE = Path(__file__).resolve().parents[1]
 DATASET_DIR = PROJECT_BASE / "datasets"
 TINY_IMAGENET_URL = "http://cs231n.stanford.edu/tiny-imagenet-200.zip"
 TINY_IMAGENET_DIR = DATASET_DIR / "tiny-imagenet-200"
+
+IMAGENETTE2_URL = "https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"
+IMAGENETTE2_DIR = DATASET_DIR / "imagenette2"
 
 
 # =========================
@@ -37,6 +41,25 @@ def _ensure_tiny_imagenet() -> Path:
 
     zip_path.unlink(missing_ok=True)
     return TINY_IMAGENET_DIR
+
+
+def _ensure_imagenette2() -> Path:
+    """Ensure imagenette2 exists under datasets/. Download if needed."""
+    if IMAGENETTE2_DIR.exists():
+        return IMAGENETTE2_DIR
+
+    DATASET_DIR.mkdir(parents=True, exist_ok=True)
+    tgz_path = DATASET_DIR / "imagenette2.tgz"
+
+    print(f"[Imagenette2] Downloading to {tgz_path} ...")
+    urllib.request.urlretrieve(IMAGENETTE2_URL, tgz_path)
+
+    print("[Imagenette2] Extracting ...")
+    with tarfile.open(tgz_path, "r:gz") as tar:
+        tar.extractall(path=DATASET_DIR)
+
+    tgz_path.unlink(missing_ok=True)
+    return IMAGENETTE2_DIR
 
 
 class TinyImageNetVal(Dataset):
@@ -94,37 +117,32 @@ class TransformSubset(Dataset):
 # =========================
 def get_data_loaders(cfg):
     """
-    Tiny ImageNet only.
-    Raises if cfg.dataset_name != 'tiny_imagenet'.
+    Supports 'tiny_imagenet' and 'imagenette2'.
     Uses cfg.seed for reproducibility.
     """
-    if getattr(cfg, "dataset_name", "").lower() != "tiny_imagenet":
-        raise ValueError("get_data_loaders only supports dataset_name='tiny_imagenet'")
+    if cfg.dataset_name.lower() not in ["tiny_imagenet", "imagenette2"]:
+        raise ValueError("get_data_loaders supports 'tiny_imagenet' or 'imagenette2'")
 
-    root = _ensure_tiny_imagenet()
-
-    image_size = getattr(cfg, "image_size", 64)
-    seed = getattr(cfg, "seed", 42)
-    pin_memory = getattr(cfg, "pin_memory", True)
-    persistent_workers = getattr(cfg, "persistent_workers", True)
-
+    # Common transforms setup
     mean = (0.4802, 0.4481, 0.3975)
     std = (0.2770, 0.2691, 0.2821)
 
-    # Augmentation params
-    crop_min_scale = getattr(cfg, "aug_crop_min_scale", 0.6)
-    crop_max_scale = getattr(cfg, "aug_crop_max_scale", 1.0)
-    crop_min_ratio = getattr(cfg, "aug_crop_min_ratio", 0.75)
-    crop_max_ratio = getattr(cfg, "aug_crop_max_ratio", 1.33)
-
-    rand_num_ops = getattr(cfg, "aug_rand_num_ops", 2)
-    rand_magnitude = getattr(cfg, "aug_rand_magnitude", 9)
-
-    erase_prob = getattr(cfg, "aug_erase_prob", 0.1)
-    erase_min_scale = getattr(cfg, "aug_erase_min_scale", 0.02)
-    erase_max_scale = getattr(cfg, "aug_erase_max_scale", 0.33)
-    erase_min_ratio = getattr(cfg, "aug_erase_min_ratio", 0.3)
-    erase_max_ratio = getattr(cfg, "aug_erase_max_ratio", 3.3)
+    image_size = cfg.image_size
+    seed = cfg.seed
+    # crop
+    crop_min_scale = cfg.aug_crop_min_scale
+    crop_max_scale = cfg.aug_crop_max_scale
+    crop_min_ratio = cfg.aug_crop_min_ratio
+    crop_max_ratio = cfg.aug_crop_max_ratio
+    # rand
+    rand_num_ops = cfg.aug_rand_num_ops
+    rand_magnitude = cfg.aug_rand_magnitude
+    # erase
+    erase_prob = cfg.aug_erase_prob
+    erase_min_scale = cfg.aug_erase_min_scale
+    erase_max_scale = cfg.aug_erase_max_scale
+    erase_min_ratio = cfg.aug_erase_min_ratio
+    erase_max_ratio = cfg.aug_erase_max_ratio
 
     train_tf = transforms.Compose(
         [
@@ -156,8 +174,22 @@ def get_data_loaders(cfg):
         ]
     )
 
-    # Base dataset (no transform yet)
-    base_train = datasets.ImageFolder(os.path.join(root, "train"), transform=None)
+    if cfg.dataset_name == "tiny_imagenet":
+        root = _ensure_tiny_imagenet()
+        # Base dataset (no transform yet)
+        base_train = datasets.ImageFolder(os.path.join(root, "train"), transform=None)
+        # Test from val/ folder (custom structure)
+        test_ds = TinyImageNetVal(
+            root, class_to_idx=base_train.class_to_idx, transform=eval_tf
+        )
+    elif cfg.dataset_name == "imagenette2":
+        root = _ensure_imagenette2()
+        # Base dataset (no transform yet)
+        base_train = datasets.ImageFolder(os.path.join(root, "train"), transform=None)
+        # Test from val/ folder (standard structure)
+        test_ds = datasets.ImageFolder(os.path.join(root, "val"), transform=eval_tf)
+    else:
+        raise ValueError(f"Unknown dataset: {cfg.dataset_name}")
 
     # 90/10 split using cfg.seed
     n_total = len(base_train)
@@ -170,38 +202,35 @@ def get_data_loaders(cfg):
     train_ds = TransformSubset(base_train, train_subset.indices, transform=train_tf)
     val_ds = TransformSubset(base_train, val_subset.indices, transform=eval_tf)
 
-    # Test from val/ folder
-    test_ds = TinyImageNetVal(
-        root, class_to_idx=base_train.class_to_idx, transform=eval_tf
-    )
-
     # DataLoaders
     train_loader = DataLoader(
         train_ds,
         batch_size=cfg.batch_size,
         shuffle=True,
         num_workers=cfg.num_workers,
-        pin_memory=pin_memory,
-        persistent_workers=persistent_workers,
+        pin_memory=True,
+        persistent_workers=True,
         drop_last=True,
+        
     )
     val_loader = DataLoader(
         val_ds,
         batch_size=cfg.batch_size,
         shuffle=False,
         num_workers=cfg.num_workers,
-        pin_memory=pin_memory,
-        persistent_workers=persistent_workers,
+        pin_memory=True,
+        persistent_workers=True,
     )
     test_loader = DataLoader(
         test_ds,
         batch_size=cfg.batch_size,
         shuffle=False,
         num_workers=cfg.num_workers,
-        pin_memory=pin_memory,
-        persistent_workers=persistent_workers,
+        pin_memory=True,
+        persistent_workers=True,
     )
     print(
+        f"Dataset: {cfg.dataset_name}\n"
         f"Samples -> Train: {len(train_ds)}, Val: {len(val_ds)}, Test: {len(test_ds)}, Classes: {len(base_train.class_to_idx)}"
     )
     print(

@@ -3,10 +3,12 @@ import sys
 from contextlib import redirect_stdout
 
 import hydra
+from transformers import AutoModelForCausalLM
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from model.cola_model import convert_vit_to_cola_m
+
 
 @hydra.main(version_base=None, config_path="../conf", config_name="vit_adamw")
 def main(cfg):
@@ -32,18 +34,18 @@ def main(cfg):
         intermediate_size=intermediate_size,
         layer_norm_eps=1e-6,
         qkv_bias=True,
-        hidden_dropout_prob=getattr(cfg, "hidden_dropout_prob", 0.0),
+        hidden_dropout_prob=cfg.hidden_dropout_prob,
     )
     model = ViTForImageClassification(config)
 
     from torchinfo import summary
 
-    # cfg.use_intermediate_rank_scale = True
+    # cfg.cola_use_intermediate_rank_scale = True
 
     cola = ViTForImageClassification(config)
     cola = convert_vit_to_cola_m(
         model=cola,
-        use_intermediate_rank_scale=cfg.use_intermediate_rank_scale,
+        cola_use_intermediate_rank_scale=cfg.cola_use_intermediate_rank_scale,
         intermediate_size=cfg.intermediate_size,
     )
 
@@ -70,8 +72,14 @@ def main(cfg):
 
     with open(os.path.join(outputs_dir, "cola_model.txt"), "w", encoding="utf-8") as f:
         f.write(str(cola))
-
     print(f"Model outputs saved to {outputs_dir}")
+    model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+
+    # print(model)
+    for module_name, module in model.named_modules():
+        print(module_name, module)
 
 
 if __name__ == "__main__":

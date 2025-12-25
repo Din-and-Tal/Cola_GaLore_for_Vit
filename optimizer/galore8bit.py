@@ -96,6 +96,7 @@ class AdamW8bit(Optimizer2State):
 
                     # suboptimal implementation
                     p.saved_data = p.data.clone()
+
                     p.data = grad.clone().to(p.data.dtype).to(p.data.device)
                     p.data.zero_()
                     p.grad = grad

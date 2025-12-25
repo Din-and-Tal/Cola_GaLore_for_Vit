@@ -3,4 +3,4 @@
     - _self_
     
     use_cola: true
-    optimizer_name: adamw
+    optimizer_name: galore_layer

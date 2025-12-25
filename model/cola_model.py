@@ -1,17 +1,19 @@
 import torch.nn as nn
+from transformers.activations import ACT2FN
 
 from model.cola_layer import ColaLinear
-from transformers.activations import ACT2FN
 
 
 def convert_vit_to_cola_m(
     model,
-    use_intermediate_rank_scale,
+    cola_use_intermediate_rank_scale,
     intermediate_size,
     rank_ratio=0.25,
-    lr_act_type="silu"
+    cola_act="silu",
+    cola_use_checkpointing=True,
 ):
-    lr_act = ACT2FN[lr_act_type]
+    lr_act = ACT2FN[cola_act]
+
     def replace_linear_with_cola(
         module,
         name_prefix="",
@@ -28,7 +30,10 @@ def convert_vit_to_cola_m(
 
                 base_dim = min(in_feat, out_feat)
 
-                if use_intermediate_rank_scale and "intermediate.dense" in full_name:
+                if (
+                    cola_use_intermediate_rank_scale
+                    and "intermediate.dense" in full_name
+                ):
                     base_dim = intermediate_size
 
                 rank = max(1, int(base_dim * rank_ratio))
@@ -38,8 +43,8 @@ def convert_vit_to_cola_m(
                     out_features=out_feat,
                     rank=rank,
                     bias=(child.bias is not None),
-                    use_checkpointing=True,
-                    lr_act_type=lr_act_type
+                    cola_use_checkpointing=cola_use_checkpointing,
+                    cola_act=cola_act,
                 )
 
                 setattr(module, name, cola_layer)
