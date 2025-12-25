@@ -33,11 +33,13 @@ class Trainer:
         cfg.total_steps = len(self.loaders.train) * cfg.num_epochs
 
         # 3. Model & Measure Memory
-        # TODO: check how to make custom model go to gpu (ColaViTForImageClassification)
-        self.model = build_model(cfg).to(self.device)
-        
-        # if cfg.use_activation_checkpointing:
-        #     self.model.gradient_checkpointing_enable()
+        if cfg.use_bf16:
+            self.model = build_model(cfg).to(self.device, dtype=torch.bfloat16)
+        else:
+            self.model = build_model(cfg).to(self.device)
+
+        if cfg.use_activation_checkpointing:
+            self.model.gradient_checkpointing_enable()
         
         # 4. Optimizer & Scheduler
         self.scheduler, self.optimizer, self.optimizer_dict = get_optimizer_scheduler(

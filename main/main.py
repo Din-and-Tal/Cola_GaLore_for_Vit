@@ -13,6 +13,9 @@ from util.optuna_utils import create_optuna_study, suggest_hyperparams
 
 @hydra.main(version_base=None, config_path="../conf", config_name="")
 def main(cfg):
+    # for detailed memory debugging
+    # torch.cuda.memory._record_memory_history()
+
     torch.set_float32_matmul_precision("high")
 
     if cfg.get("use_optuna", False):
@@ -44,6 +47,9 @@ def main(cfg):
     else:
         trainer = Trainer(cfg)
         trainer.train()
+    
+    # torch.cuda.memory._dump_snapshot(f"memory_snapshot_{cfg.optimizer_name}.pickle")
+
 
 
 if __name__ == "__main__":

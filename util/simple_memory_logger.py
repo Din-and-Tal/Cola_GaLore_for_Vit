@@ -27,7 +27,11 @@ def measure_memory_breakdown(model,cfg, optimizer, loss_fn, loader, device="cuda
         return None
 
     device = torch.device(device)
-    model.to(device)
+    if cfg.use_bf16:
+        self.model = build_model(cfg).to(self.device, dtype=torch.bfloat16)
+    else:
+        self.model = build_model(cfg).to(self.device)
+
     model.train()
 
     # One batch

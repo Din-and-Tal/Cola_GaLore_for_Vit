@@ -2,10 +2,9 @@ defaults:
   - _self_
   - optuna
 
-use_profiler: true
-
-big_checkpointing: false
-#use_activation_checkpointing: false
+use_profiler: false
+use_bf16: true
+use_activation_checkpointing: false
 
 optimizer_name: adamw #adamw , adamw8, galore, galore_layer
 use_wandb: true
