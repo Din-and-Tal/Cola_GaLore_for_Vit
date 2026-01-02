@@ -1,55 +1,25 @@
 import os
 import sys
 
-import torch
 import hydra
-import optuna
+import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from train.trainer_setup import Trainer
-from util.optuna_utils import create_optuna_study, suggest_hyperparams
+from util.optuna_utils import run_optuna
 
 
-@hydra.main(version_base=None, config_path="../conf", config_name="")
+@hydra.main(version_base=None, config_path="../conf", config_name="vit_galore_layer")
 def main(cfg):
-    # for detailed memory debugging
-    # torch.cuda.memory._record_memory_history()
-
     torch.set_float32_matmul_precision("high")
 
-    if cfg.get("use_optuna", False):
-        study = create_optuna_study(cfg)
-
-        def objective(trial):
-            suggested_params = suggest_hyperparams(trial, cfg)
-            print(
-                f"\n[Trial {trial.number}] Testing hyperparameters: {suggested_params}"
-            )
-
-            cfg_copy = cfg.copy()
-            for key, value in suggested_params.items():
-                cfg_copy[key] = value
-
-            trainer = Trainer(cfg_copy)
-
-            try:
-                best_loss = trainer.train(trial=trial)
-                print(f"[Trial {trial.number}] Result (Val Loss): {best_loss:.4f}")
-                return best_loss
-            except optuna.exceptions.TrialPruned:
-                print(f"[Trial {trial.number}] Pruned.")
-                raise
-
-        study.optimize(objective, n_trials=cfg.optuna.n_trials if cfg.full_train else 1)
-        print(f"Best params: {study.best_params}")
+    if cfg.use_optuna:
+        run_optuna(cfg)
 
     else:
         trainer = Trainer(cfg)
         trainer.train()
-    
-    # torch.cuda.memory._dump_snapshot(f"memory_snapshot_{cfg.optimizer_name}.pickle")
-
 
 
 if __name__ == "__main__":

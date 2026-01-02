@@ -30,10 +30,9 @@ import torch
 
 class GaLoreProjector:
     def __init__(self, rank, verbose=False, update_proj_gap=200, scale=1.0, proj_type='std'):
-        self.rank = rank #TODO: make r adaptive , e.g., based on singular values OR
-                        # TODO: make it decrease  over time during training
+        self.rank = rank 
         self.verbose = verbose
-        self.update_proj_gap = update_proj_gap # TODO: make it adaptive?
+        self.update_proj_gap = update_proj_gap
         self.scale = scale
         self.ortho_matrix = None
         self.proj_type = proj_type
@@ -145,7 +144,7 @@ class GaLoreProjector:
         """
         module_params = weights
 
-        if module_params.data.dtype != torch.float: # TODO: support bfloat16 or use other method to get svd for low precision data
+        if module_params.data.dtype != torch.float:
             float_data = False
             original_type = module_params.data.dtype
             original_device = module_params.data.device

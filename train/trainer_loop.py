@@ -5,6 +5,7 @@ import torch
 
 from train.trainer_utils import apply_mixup_cutmix
 
+
 def train_loop(trainer, trial):
     """Run full training using the Trainer object."""
     cfg = trainer.cfg
@@ -14,13 +15,12 @@ def train_loop(trainer, trial):
     early_stopping_patience = -1 if cfg.use_optuna else cfg.early_stopping_patience
 
     # Limit training when full_train is False
-    num_epochs = cfg.num_epochs if cfg.full_train else 5
+    num_epochs = cfg.num_epochs if cfg.full_train else 7
 
     print("\nStarting training...")
-    start_time = time.time()
 
     for epoch in range(num_epochs):
-        epoch_start = time.time()
+        start_time = time.time()
         train_loss, train_acc = epoch_step(
             trainer, trainer.loaders.train, True, cfg.full_train
         )
@@ -35,31 +35,25 @@ def train_loop(trainer, trial):
             patience_counter = 0
         else:
             patience_counter += 1
-            
+
         # ----- Optuna Pruning -----
         if trial is not None:
             trial.report(val_loss, epoch)  # Report loss instead of acc
             if trial.should_prune():
-                print(
-                    f"[Epoch {epoch}] Trial pruned by Optuna (val_acc={val_acc:.2f})"
-                )
+                print(f"[Epoch {epoch}] Trial pruned by Optuna (val_acc={val_acc:.2f})")
                 raise optuna.exceptions.TrialPruned()
 
-        if (
-            early_stopping_patience > 0
-            and patience_counter >= early_stopping_patience
-        ):
+        if early_stopping_patience > 0 and patience_counter >= early_stopping_patience:
             print(
                 f"\n[Early Stopping] Triggered after {patience_counter} epochs without improvement."
             )
             break
 
-        if 'layer' in cfg.optimizer_name:
+        if "layer" in cfg.optimizer_name:
             lr = list(trainer.optimizer_dict.values())[0].param_groups[0]["lr"]
         else:
-            trainer.scheduler.step()
-            lr = trainer.optimizer.param_groups[0]["lr"]        
-            
+            lr = trainer.optimizer.param_groups[0]["lr"]
+
         epoch_time = time.time() - start_time
         if cfg.verbose:
             print(
@@ -102,6 +96,7 @@ def train_loop(trainer, trial):
 def epoch_step(trainer, loader, is_training, full_train=True):
     model = trainer.model
     optimizer = trainer.optimizer
+    scheduler = trainer.scheduler
     loss_fn = trainer.loss_func
     device = trainer.device
     scaler = trainer.scaler
@@ -113,15 +108,15 @@ def epoch_step(trainer, loader, is_training, full_train=True):
     model.train() if is_training else model.eval()
 
     for batch_idx, (inputs, targets) in enumerate(loader):
-        if not full_train and batch_idx>3:
+        if not full_train and batch_idx > 3:
             break
-            
+
         inputs = inputs.to(device, non_blocking=True)
         targets = targets.to(device, non_blocking=True)
-        
-        if 'layer' not in cfg.optimizer_name:
-                optimizer.zero_grad()
-                  
+
+        if "layer" not in cfg.optimizer_name:
+            optimizer.zero_grad()
+
         if is_training:
             # ----- Mixup / CutMix -----
             inputs_mixed, targets_a, targets_b, lam, used_mix = apply_mixup_cutmix(
@@ -130,6 +125,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
 
             # ----- AMP forward -----
             with torch.autocast(device_type=device, enabled=scaler.is_enabled()):
+
                 outputs = model(pixel_values=inputs_mixed).logits
                 if used_mix:
                     loss = lam * loss_fn(outputs, targets_a) + (1.0 - lam) * loss_fn(
@@ -148,9 +144,11 @@ def epoch_step(trainer, loader, is_training, full_train=True):
                     torch.nn.utils.clip_grad_norm_(
                         model.parameters(), cfg.max_grad_norm
                     )
-                if 'layer' not in cfg.optimizer_name:
+                if "layer" not in cfg.optimizer_name:
                     scaler.step(optimizer)
                     scaler.update()
+                    scheduler.step()
+
                 else:
                     raise ValueError("not implemented")
             else:
@@ -159,12 +157,13 @@ def epoch_step(trainer, loader, is_training, full_train=True):
                     torch.nn.utils.clip_grad_norm_(
                         model.parameters(), cfg.max_grad_norm
                     )
-                if 'layer' not in cfg.optimizer_name:
+                if "layer" not in cfg.optimizer_name:
                     optimizer.step()
-                    
+                    scheduler.step()
 
         else:
             with torch.inference_mode():
+
                 outputs = model(pixel_values=inputs).logits
                 loss = loss_fn(outputs, targets)
 
