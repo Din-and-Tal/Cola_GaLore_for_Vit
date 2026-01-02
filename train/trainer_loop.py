@@ -15,7 +15,7 @@ def train_loop(trainer, trial):
     early_stopping_patience = -1 if cfg.use_optuna else cfg.early_stopping_patience
 
     # Limit training when full_train is False
-    num_epochs = cfg.num_epochs if cfg.full_train else 7
+    num_epochs = cfg.num_epochs if cfg.full_train else 10
 
     print("\nStarting training...")
 
@@ -108,7 +108,7 @@ def epoch_step(trainer, loader, is_training, full_train=True):
     model.train() if is_training else model.eval()
 
     for batch_idx, (inputs, targets) in enumerate(loader):
-        if not full_train and batch_idx > 3:
+        if not full_train and batch_idx > 20:
             break
 
         inputs = inputs.to(device, non_blocking=True)
