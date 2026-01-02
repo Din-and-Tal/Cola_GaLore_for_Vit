@@ -129,7 +129,7 @@ def get_optimizer_scheduler(model, cfg):
         cycle_mult=cfg.scheduler_cycle_mult,
         max_lr=cfg.scheduler_max_lr,
         min_lr=cfg.scheduler_min_lr,
-        warmup_steps=cfg.scheduler_warmup_steps,
+        warmup_steps=cfg.scheduler_warmup_pct * cfg.total_steps,
         gamma=cfg.scheduler_gamma,
     )
     print(f"using optimizer: {cfg.optimizer_name}")

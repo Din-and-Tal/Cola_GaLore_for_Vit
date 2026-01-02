@@ -2,7 +2,6 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-
 def get_data_loaders(cfg):
     mean = (0.4914, 0.4822, 0.4465)
     std = (0.2023, 0.1994, 0.2010)
@@ -10,7 +9,7 @@ def get_data_loaders(cfg):
     transform_train = torchvision.transforms.Compose(
         [
             transforms.Resize(cfg.image_size),
-            transforms.RandomCrop(32, padding=4),
+            transforms.RandomCrop(cfg.aug_rand_crop_size, padding=cfg.aug_rand_crop_padding),
             transforms.RandomHorizontalFlip(),
             transforms.RandAugment(num_ops=cfg.aug_rand_num_ops, magnitude=cfg.aug_rand_magnitude),
             transforms.ToTensor(),

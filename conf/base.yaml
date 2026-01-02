@@ -5,7 +5,7 @@ defaults:
 use_profiler: false
 use_bf16: false
 use_checkpointing: true
-use_wandb: true
+use_wandb: false
 use_amp: false
 use_optuna: false
 full_train: true
@@ -16,18 +16,18 @@ num_epochs: 200
 batch_size: 512
 num_workers: 4
 total_steps: -1 #this will be overriden in trainer setup
-early_stopping_patience: -1 # warning: keep -1
+early_stopping_patience: -1 # -1: disabled
 seed: 42
 
 # Cola settings
 cola_rank_ratio: 0.25
+cola_use_intermediate_rank_scale: true
 cola_act: "gelu"
-cola_use_intermediate_rank_scale: false
 
 # Galore settings
 galore_rank: 128
 galore_update_proj_gap: 200
-galore_scale: 0.25
+galore_scale: 1
 galore_proj_type: "std"
 
 # Optimizer settings
@@ -38,7 +38,6 @@ max_grad_norm: 1.0
 scheduler_cycle_mult: 1.0
 scheduler_max_lr: 1e-4
 scheduler_min_lr: 1e-6
-scheduler_warmup_steps: 1 # original was 1
 scheduler_warmup_pct: 0.02
 scheduler_gamma: 1
 
@@ -63,6 +62,8 @@ mix_prob: 0.2
 # Augmentation (RandAugment)
 aug_rand_num_ops: 2
 aug_rand_magnitude: 14
+aug_rand_crop_size: 32
+aug_rand_crop_padding: 4
 
 # Wandb settings
 wandb_project_name: "no_project_name"

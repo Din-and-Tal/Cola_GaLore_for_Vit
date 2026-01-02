@@ -51,7 +51,7 @@ class Trainer:
 
         # 5. Wandb Initialization
         if cfg.use_wandb:
-            project_name = "test_runs" if not cfg.full_train else cfg.wandb_project_name
+            project_name = "test_runs" if not cfg.full_train and cfg.wandb_project_name=="no_project_name" else cfg.wandb_project_name
             # Convert config to dict to save all parameters individually
             config_dict = {}
             for key in dir(cfg):
@@ -70,7 +70,7 @@ class Trainer:
             if "galore" in cfg.optimizer_name:
                 extra_name += f"_gr={cfg.galore_rank}_T={cfg.galore_update_proj_gap}_s={cfg.galore_scale}"
 
-            test_and_bug = ""
+            test_and_bug = f"_cp={int(cfg.use_checkpointing)}"
             if cfg.use_bf16:
                 test_and_bug = "_bf16"
 
