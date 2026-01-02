@@ -5,7 +5,7 @@ defaults:
 use_profiler: false
 use_bf16: false
 use_checkpointing: true
-use_wandb: false
+use_wandb: true
 use_amp: false
 use_optuna: false
 full_train: true
@@ -21,13 +21,13 @@ seed: 42
 
 # Cola settings
 cola_rank_ratio: 0.25
-cola_use_intermediate_rank_scale: true
+cola_use_intermediate_rank_scale: false
 cola_act: "gelu"
 
 # Galore settings
 galore_rank: 128
 galore_update_proj_gap: 200
-galore_scale: 1
+galore_scale: 0.25
 galore_proj_type: "std"
 
 # Optimizer settings
