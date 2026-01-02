@@ -8,9 +8,8 @@ def convert_vit_to_cola_m(
     model,
     cola_use_intermediate_rank_scale,
     intermediate_size,
-    rank_ratio=0.25,
-    cola_act="silu",
-    cola_use_checkpointing=True,
+    rank_ratio,
+    cola_act,
 ):
     lr_act = ACT2FN[cola_act]
 
@@ -43,7 +42,6 @@ def convert_vit_to_cola_m(
                     out_features=out_feat,
                     rank=rank,
                     bias=(child.bias is not None),
-                    cola_use_checkpointing=cola_use_checkpointing,
                     cola_act=cola_act,
                 )
 

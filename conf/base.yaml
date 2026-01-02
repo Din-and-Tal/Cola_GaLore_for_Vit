@@ -1,112 +1,99 @@
 defaults:
   - _self_
-  - optuna
 
-use_profiler: true
-use_bf16: true
-use_activation_checkpointing: false
-
-optimizer_name: adamw #adamw , adamw8, galore, galore_layer
+# General flags
+use_profiler: false
+use_bf16: false
+use_checkpointing: true
 use_wandb: true
-use_amp: false # TODO: integrate with galore
+use_amp: false
 use_optuna: false
-
 full_train: true
-size: tiny
-num_workers: 4
+verbose: true
 
+# Training configuration
+num_epochs: 200
+batch_size: 512
+num_workers: 4
+total_steps: -1 #this will be overriden in trainer setup
+early_stopping_patience: -1 # warning: keep -1
+seed: 42
+
+# Cola settings
 cola_rank_ratio: 0.25
-cola_act: "silu"
-cola_use_checkpointing: true
+cola_act: "gelu"
 cola_use_intermediate_rank_scale: false
 
+# Galore settings
 galore_rank: 128
 galore_update_proj_gap: 200
 galore_scale: 0.25
 galore_proj_type: "std"
 
-total_steps: -1 #this will be overriden in trainer setup
-
-early_stopping_patience: -1
-
-num_epochs: 150
-batch_size: 512
-weight_decay: 0.06 # 0.037343324638226455
+# Optimizer settings
+weight_decay: 0
 max_grad_norm: 1.0
 
+# Scheduler settings
 scheduler_cycle_mult: 1.0
-scheduler_max_lr: 3e-4  #0.00020545522334013431
+scheduler_max_lr: 1e-4
 scheduler_min_lr: 1e-6
-scheduler_warmup_steps: 5
-scheduler_gamma: 1
+scheduler_warmup_steps: 1 # original was 1
 scheduler_warmup_pct: 0.02
+scheduler_gamma: 1
 
-hidden_dropout_prob: 0.2 #0.0910218284106628
-
-label_smoothing: 0.1 #0.09740441812870372
-
-use_mixup: true
-mixup_alpha: 0.2 #0.27067234802367746
-use_cutmix: true
-cutmix_alpha: 0.2 #0.06735967157072321
-mix_prob: 0.2 #0.5440847747941563
-
-# Augmentation
-aug_crop_min_scale: 0.6
-aug_crop_max_scale: 1.0
-aug_crop_min_ratio: 0.75
-aug_crop_max_ratio: 1.33
-aug_rand_num_ops: 2
-aug_rand_magnitude: 9
-aug_erase_prob: 0.1
-aug_erase_min_scale: 0.02
-aug_erase_max_scale: 0.33
-aug_erase_min_ratio: 0.3
-aug_erase_max_ratio: 3.3
-
-seed: 42
-
-image_size: 64
-patch_size: 8
+# Data configuration
+dataset_name: "cifar10"
+num_classes: 10
+image_size: 32
+patch_size: 4
 num_channels: 3
 
-#tiny_imagenet, 200 classes
-# imagenette2, 10 classes
-dataset_name: "imagenette2"
-num_classes: 10
+# Regularization
+hidden_dropout_prob: 0.1
+label_smoothing: 0.0
 
+# Data augmentation (mixup/cutmix)
+use_mixup: false
+mixup_alpha: 0.2
+use_cutmix: false
+cutmix_alpha: 0.2
+mix_prob: 0.2
+
+# Augmentation (RandAugment)
+aug_rand_num_ops: 2
+aug_rand_magnitude: 14
+
+# Wandb settings
 wandb_project_name: "no_project_name"
 wandb_team_name: "din-alon-technion-israel-institute-of-technology"
 
+# Hydra config
 config_name: ${hydra:job.config_name}
-verbose: true
 
-# model sizes --------------------------------------------
+# Model architecture
+size: tiny
 vit_presents:
   tiny:
     hidden_size: 192
     num_hidden_layers: 12
     num_attention_heads: 3
     intermediate_size: 768
-
   small:
     hidden_size: 384
     num_hidden_layers: 12
     num_attention_heads: 6
     intermediate_size: 1536
-
   base:
     hidden_size: 768
     num_hidden_layers: 12
     num_attention_heads: 12
     intermediate_size: 3072
-
   large:
     hidden_size: 1024
     num_hidden_layers: 24
     num_attention_heads: 16
     intermediate_size: 4096
-
   huge:
     hidden_size: 1280
     num_hidden_layers: 32
@@ -117,3 +104,28 @@ hidden_size: ${vit_presents.${size}.hidden_size}
 num_hidden_layers: ${vit_presents.${size}.num_hidden_layers}
 num_attention_heads: ${vit_presents.${size}.num_attention_heads}
 intermediate_size: ${vit_presents.${size}.intermediate_size}
+
+# Optuna configuration
+optuna:
+  study_name: "vit_hpo"
+  direction: "minimize"  # Changed from maximize to minimize val_loss
+  n_trials: 50
+  n_jobs: 1
+  sampler: "tpe"  # Tree-structured Parzen Estimator
+  
+  # Pruner configuration
+  n_warmup_steps: 10    # Don't prune the first 10 epochs of any trial
+  early_stopping_patience: 30
+
+  search_space:
+    cola_rank_ratio: [0, 1] 
+
+    scheduler_max_lr: [1e-4, 6e-4]
+    weight_decay: [0.02, 0.12]
+
+    label_smoothing: [0.0, 0.10]
+    hidden_dropout_prob: [0.0, 0.3]
+
+    mixup_alpha: [0.0, 0.30]
+    cutmix_alpha: [0.0, 0.20] 
+    mix_prob: [0.0, 0.70]

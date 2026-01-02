@@ -2,6 +2,34 @@ import optuna
 from optuna.pruners import SuccessiveHalvingPruner, PatientPruner
 from optuna.samplers import TPESampler
 
+from train.trainer_setup import Trainer
+
+def run_optuna(cfg):
+        study = create_optuna_study(cfg)
+
+        def objective(trial):
+            suggested_params = suggest_hyperparams(trial, cfg)
+            print(
+                f"\n[Trial {trial.number}] Testing hyperparameters: {suggested_params}"
+            )
+
+            cfg_copy = cfg.copy()
+            for key, value in suggested_params.items():
+                cfg_copy[key] = value
+
+            trainer = Trainer(cfg_copy)
+
+            try:
+                best_loss = trainer.train(trial=trial)
+                print(f"[Trial {trial.number}] Result (Val Loss): {best_loss:.4f}")
+                return best_loss
+            except optuna.exceptions.TrialPruned:
+                print(f"[Trial {trial.number}] Pruned.")
+                raise
+
+        study.optimize(objective, n_trials=cfg.optuna.n_trials if cfg.full_train else 1)
+        print(f"Best params: {study.best_params}")
+
 
 def create_optuna_study(config) -> optuna.Study:
     sampler = TPESampler(seed=config.seed)

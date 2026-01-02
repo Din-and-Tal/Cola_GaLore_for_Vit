@@ -155,10 +155,10 @@ class GaLoreProjectorTensor:
         """
         module_params = weights
         if module_params.data.dtype != torch.float:
-            matrix = module_params.data.float()  # TODO: check if this increase memory usage significantly
+            matrix = module_params.data.float() 
         else:
             matrix = module_params.data
-        tucker_tensor = tucker(matrix, rank=rank_all)  # TODO: more efficient way?
+        tucker_tensor = tucker(matrix, rank=rank_all) 
         return tucker_tensor
 
     def transform(self, tensor, x):

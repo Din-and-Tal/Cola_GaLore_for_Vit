@@ -3,11 +3,10 @@
 config_names=(
     "vit_adamw"
     # "vit_galore_layer"
-#    "cola_adamw"
-    # "cola_galore_layer"
+    #"cola_adamw"
+    "cola_galore_layer"
 )
 
-set -e # terminates consecutive calls when error occurs
 
 for config in "${config_names[@]}"; do
     echo "Running with config: $config"

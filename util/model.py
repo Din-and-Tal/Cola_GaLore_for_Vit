@@ -25,13 +25,12 @@ def build_model(cfg):
             intermediate_size=cfg.intermediate_size,
             rank_ratio=cfg.cola_rank_ratio,
             cola_act=cfg.cola_act,
-            cola_use_checkpointing=cfg.cola_use_checkpointing,
         )
-        if cfg.big_checkpointing:
-            model.gradient_checkpointing_enable()
-            model.config.use_cache = False
-        print(f"DEBUG::::: {model.is_gradient_checkpointing}")
     else:
         model = ViTForImageClassification(vit_config)
-
+    
+    if cfg.use_checkpointing:
+        model.gradient_checkpointing_enable()
+        model.config.use_cache = False
+    
     return model

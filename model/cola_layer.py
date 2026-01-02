@@ -59,10 +59,8 @@ class ColaLinear(nn.Module):
         rank,
         bias=True,
         cola_act="silu",
-        cola_use_checkpointing=True,
     ):
         super().__init__()
-        self.cola_use_checkpointing = cola_use_checkpointing
 
         self.down = ColaMDownProjLayer(
             in_features=in_features,
@@ -77,16 +75,5 @@ class ColaLinear(nn.Module):
         )
 
     def forward(self, x):
-        # low_rank_act = self.down(x)
-        # def layer(x):
-        #     return self.up(self.down(x))
-        # def up_only(low_rank_act):
-        #     return self.up(low_rank_act)
-            
-        # if self.training and self.cola_use_checkpointing and x.requires_grad:
-        #     output = checkpoint(
-        #         layer, x, use_reentrant=True, preserve_rng_state=False
-        #     )
-        # else:
-    #TODO: checkpointing
+
         return self.up(self.down(x))
