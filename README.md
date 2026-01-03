@@ -1,4 +1,4 @@
-# 🚀 GaLore + CoLA for Vision Transformers
+# 🚀 CoLA + GaLore for Vision Transformers
 
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-orange.svg)](https://pytorch.org/)
@@ -6,7 +6,9 @@
 
 **Memory-Efficient Pre-Training of Large Vision Transformers on Single GPU**
 
-This project implements and combines two state-of-the-art rank decomposition methods—**CoLA** (Low-Rank Activation) and **GaLore** (Gradient Low-Rank Projection)—to enable efficient pre-training of Vision Transformers (ViT) from scratch on a single GPU without significant performance degradation.
+This project implements and combines two state-of-the-art rank decomposition methods: **CoLA** (Low-Rank Activation) and **GaLore** (Gradient Low-Rank Projection) to enable efficient pre-training of Vision Transformers (ViT) from scratch on a single GPU without significant performance degradation.
+
+<img width="1000" height="1000" alt="image" src="https://github.com/user-attachments/assets/136077fe-9518-48e6-9fee-6158de9e1677" />
 
 ## 📋 Table of Contents
 
@@ -164,7 +166,7 @@ When both methods are used together:
 - **Backward pass**: GaLore reduces gradient and optimizer state memory
 - **Result**: Significant overall memory reduction enabling larger models on single GPUs
 
-## 🏗️ Architecture
+## 🏗️ File Structure
 
 ```
 GaLore_Cola_for_Vit_v3/
@@ -208,41 +210,16 @@ Our experiments compare four configurations across different model sizes and tra
 3. **CoLA + AdamW** (activation decomposition only)
 4. **CoLA + GaLore** (both decompositions)
 
-### Interactive Results Dashboard
+### Wandb Report
 
-<iframe src="https://wandb.ai/din-alon-technion-israel-institute-of-technology/cola_galore_perf_diff/reports/performance-difference--VmlldzoxNTUxNTU1Mg" style="border:none;height:1024px;width:100%"></iframe>
+[Report](https://api.wandb.ai/links/din-alon-technion-israel-institute-of-technology/tar40u65)
 
 ### Key Findings
 
-- **Memory Reduction**: Up to 60-70% memory savings with combined CoLA+GaLore
-- **Performance**: Minimal accuracy degradation (<2%) compared to baseline
-- **Scalability**: Enables training of "huge" ViT models on single 24GB GPUs
+- **Memory Reduction**: ~80% memory savings with combined CoLA+GaLore
+- **Performance**: Minimal accuracy degradation (<2%) compared to baseline but compensated with longer training.
+- **Scalability**: Enables training of "huge" ViT models on single 24GB GPU
 
-## 🔮 Future Work
-
-### Short-Term Improvements
-
-1. **Distributed Pre-Training**
-   - Multi-GPU support with DistributedDataParallel
-   - If GPU utilization < 100%, explore multi-process training per GPU
-   - GPU scheduling optimization: when one process waits for memory, continue with another
-
-2. **Parallel SVD Decomposition**
-   - Distributed SVD computation for GaLore projection updates
-   - Asynchronous projection matrix updates
-   - Pipeline parallelism for CoLA layers
-
-3. **Optimization Enhancements**
-   - Adaptive rank selection based on layer importance
-   - Dynamic `update_proj_gap` scheduling
-   - Mixed-precision training optimizations
-
-### Long-Term Research Directions
-
-- **Theoretical Analysis**: Convergence guarantees for combined decomposition methods
-- **Architecture Search**: Optimal rank ratios for different model sizes
-- **Domain Adaptation**: Extending to other vision tasks (object detection, segmentation)
-- **Hardware Optimization**: Custom CUDA kernels for CoLA/GaLore operations
 
 ## 📚 Citation
 
@@ -266,15 +243,12 @@ Our experiments compare four configurations across different model sizes and tra
 
 - **CoLA Implementation**: Based on [alvin-zyl/CoLA](https://github.com/alvin-zyl/CoLA)
 - **GaLore Implementation**: Based on [jiaweizzhao/GaLore](https://github.com/jiaweizzhao/GaLore)
+- **Base Model Hyper-Parameters**: Based on [kentaroy47/vision-transformers-cifar10](https://github.com/kentaroy47/vision-transformers-cifar10)
 - **Vision Transformer**: Built on Hugging Face Transformers library
 - **Dataset**: CIFAR-10 from PyTorch datasets
 
 ## 📝 License
 
 This project is open source and available under the MIT License.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ---
