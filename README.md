@@ -16,10 +16,9 @@ This project implements and combines two state-of-the-art rank decomposition met
 - [Key Features](#key-features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Methodology](#methodology)
-- [Architecture](#architecture)
 - [Results](#results)
-- [Future Work](#future-work)
+- [File Structure](#file-structure)
+- [Methodology](#methodology)
 - [Citation](#citation)
 - [Acknowledgments](#acknowledgments)
 
@@ -121,6 +120,66 @@ python main/main.py --config-name cola_galore_layer size=base wandb_project_name
 python main/main.py --config-name cola_galore_layer size=base use_amp=true
 ```
 
+## 📊 Results
+
+### Performance Comparison
+
+Our experiments compare four configurations across different model sizes and training settings:
+
+1. **ViT + AdamW** (baseline)
+2. **ViT + GaLore** (gradient decomposition only)
+3. **CoLA + AdamW** (activation decomposition only)
+4. **CoLA + GaLore** (both decompositions)
+
+### Wandb Report
+
+[Report](https://api.wandb.ai/links/din-alon-technion-israel-institute-of-technology/tar40u65)
+
+<img width="1768" height="644" alt="image" src="https://github.com/user-attachments/assets/42e0c1d7-232f-4954-843f-2a1446a48a94" />
+<img width="1746" height="636" alt="image" src="https://github.com/user-attachments/assets/2b21c624-e5f2-4a22-b639-cd8bedc94074" />
+<img width="1768" height="638" alt="image" src="https://github.com/user-attachments/assets/2400dcd7-ebd4-4d99-9504-8233d9b1b026" />
+<img width="1770" height="354" alt="image" src="https://github.com/user-attachments/assets/3d660ed0-28d8-41cd-9c2e-c37f9822df5a" />
+
+
+### Key Findings
+
+- **Memory Reduction**: ~80% memory savings with combined CoLA+GaLore
+- **Performance**: Minimal accuracy degradation (<2%) compared to baseline but compensated with longer training.
+- **Scalability**: Enables training of "huge" ViT models on single 24GB GPU
+
+## 🏗️ File Structure
+
+```
+GaLore_Cola_for_Vit_v3/
+├── main/
+│   └── main.py              # Entry point with Hydra configuration
+├── model/
+│   ├── cola_layer.py        # CoLA low-rank layer implementations
+│   └── cola_model.py        # ViT to CoLA conversion utilities
+├── optimizer/
+│   ├── galore_setup.py      # GaLore optimizer configuration
+│   ├── galore_projector.py  # 2D gradient projection (SVD)
+│   ├── galore_projector_tensor.py  # N-D tensor projection (Tucker)
+│   └── galore8bit.py        # 8-bit GaLore optimizer variant
+├── train/
+│   ├── trainer_setup.py     # Trainer initialization
+│   ├── trainer_loop.py      # Training loop implementation
+│   └── trainer_utils.py     # Training utilities
+├── util/
+│   ├── model.py             # Model building utilities
+│   ├── dataloader.py        # CIFAR-10 data loading
+│   ├── memory_record.py     # Memory profiling tools
+│   └── optuna_utils.py      # Hyperparameter optimization
+├── conf/
+│   ├── base.yaml            # Base configuration
+│   ├── vit_adamw.yaml       # Standard ViT config
+│   ├── vit_galore_layer.yaml
+│   ├── cola_adamw.yaml
+│   └── cola_galore_layer.yaml
+└── experiments/
+    └── mem_diff.sh          # Memory comparison scripts
+```
+
 ## 🔬 Methodology
 
 ### CoLA: Low-Rank Activation Decomposition
@@ -165,67 +224,6 @@ When both methods are used together:
 - **Forward pass**: CoLA reduces activation memory
 - **Backward pass**: GaLore reduces gradient and optimizer state memory
 - **Result**: Significant overall memory reduction enabling larger models on single GPUs
-
-## 🏗️ File Structure
-
-```
-GaLore_Cola_for_Vit_v3/
-├── main/
-│   └── main.py              # Entry point with Hydra configuration
-├── model/
-│   ├── cola_layer.py        # CoLA low-rank layer implementations
-│   └── cola_model.py        # ViT to CoLA conversion utilities
-├── optimizer/
-│   ├── galore_setup.py      # GaLore optimizer configuration
-│   ├── galore_projector.py  # 2D gradient projection (SVD)
-│   ├── galore_projector_tensor.py  # N-D tensor projection (Tucker)
-│   └── galore8bit.py        # 8-bit GaLore optimizer variant
-├── train/
-│   ├── trainer_setup.py     # Trainer initialization
-│   ├── trainer_loop.py      # Training loop implementation
-│   └── trainer_utils.py     # Training utilities
-├── util/
-│   ├── model.py             # Model building utilities
-│   ├── dataloader.py        # CIFAR-10 data loading
-│   ├── memory_record.py     # Memory profiling tools
-│   └── optuna_utils.py      # Hyperparameter optimization
-├── conf/
-│   ├── base.yaml            # Base configuration
-│   ├── vit_adamw.yaml       # Standard ViT config
-│   ├── vit_galore_layer.yaml
-│   ├── cola_adamw.yaml
-│   └── cola_galore_layer.yaml
-└── experiments/
-    └── mem_diff.sh          # Memory comparison scripts
-```
-
-## 📊 Results
-
-### Performance Comparison
-
-Our experiments compare four configurations across different model sizes and training settings:
-
-1. **ViT + AdamW** (baseline)
-2. **ViT + GaLore** (gradient decomposition only)
-3. **CoLA + AdamW** (activation decomposition only)
-4. **CoLA + GaLore** (both decompositions)
-
-### Wandb Report
-
-[Report](https://api.wandb.ai/links/din-alon-technion-israel-institute-of-technology/tar40u65)
-
-<img width="1768" height="644" alt="image" src="https://github.com/user-attachments/assets/42e0c1d7-232f-4954-843f-2a1446a48a94" />
-<img width="1746" height="636" alt="image" src="https://github.com/user-attachments/assets/2b21c624-e5f2-4a22-b639-cd8bedc94074" />
-<img width="1768" height="638" alt="image" src="https://github.com/user-attachments/assets/2400dcd7-ebd4-4d99-9504-8233d9b1b026" />
-<img width="1770" height="354" alt="image" src="https://github.com/user-attachments/assets/3d660ed0-28d8-41cd-9c2e-c37f9822df5a" />
-
-
-### Key Findings
-
-- **Memory Reduction**: ~80% memory savings with combined CoLA+GaLore
-- **Performance**: Minimal accuracy degradation (<2%) compared to baseline but compensated with longer training.
-- **Scalability**: Enables training of "huge" ViT models on single 24GB GPU
-
 
 ## 📚 Citation
 
