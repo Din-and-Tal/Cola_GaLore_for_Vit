@@ -10,18 +10,6 @@ This project implements and combines two state-of-the-art rank decomposition met
 
 <img width="1000" height="1000" alt="image" src="https://github.com/user-attachments/assets/136077fe-9518-48e6-9fee-6158de9e1677" />
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Results](#results)
-- [File Structure](#file-structure)
-- [Methodology](#methodology)
-- [Citation](#citation)
-- [Acknowledgments](#acknowledgments)
-
 ## 🎯 Overview
 
 Training large Vision Transformers from scratch requires substantial GPU memory, often limiting researchers and practitioners to smaller models or requiring expensive multi-GPU setups. This project addresses this challenge by:
@@ -135,11 +123,10 @@ Our experiments compare four configurations across different model sizes and tra
 
 [Report](https://api.wandb.ai/links/din-alon-technion-israel-institute-of-technology/tar40u65)
 
-<img width="1768" height="644" alt="image" src="https://github.com/user-attachments/assets/42e0c1d7-232f-4954-843f-2a1446a48a94" />
-<img width="1746" height="636" alt="image" src="https://github.com/user-attachments/assets/2b21c624-e5f2-4a22-b639-cd8bedc94074" />
-<img width="1768" height="638" alt="image" src="https://github.com/user-attachments/assets/2400dcd7-ebd4-4d99-9504-8233d9b1b026" />
-<img width="1770" height="354" alt="image" src="https://github.com/user-attachments/assets/3d660ed0-28d8-41cd-9c2e-c37f9822df5a" />
-
+<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/42e0c1d7-232f-4954-843f-2a1446a48a94" />
+<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/2b21c624-e5f2-4a22-b639-cd8bedc94074" />
+<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/2400dcd7-ebd4-4d99-9504-8233d9b1b026" />
+<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/3d660ed0-28d8-41cd-9c2e-c37f9822df5a" />
 
 ### Key Findings
 
