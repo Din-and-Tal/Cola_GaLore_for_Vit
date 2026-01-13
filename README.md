@@ -1,4 +1,4 @@
-# 🚀 CoLA + GaLore for Vision Transformers
+# CoLA + GaLore for Vision Transformers
 
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-orange.svg)](https://pytorch.org/)
@@ -10,7 +10,7 @@ This project implements and combines two state-of-the-art rank decomposition met
 
 <img width="1000" height="1000" alt="image" src="https://github.com/user-attachments/assets/136077fe-9518-48e6-9fee-6158de9e1677" />
 
-## 🎯 Overview
+## Overview
 
 Training large Vision Transformers from scratch requires substantial GPU memory, often limiting researchers and practitioners to smaller models or requiring expensive multi-GPU setups. This project addresses this challenge by:
 
@@ -19,17 +19,17 @@ Training large Vision Transformers from scratch requires substantial GPU memory,
 
 By combining both techniques, we achieve significant memory savings while maintaining competitive model performance on CIFAR-10 classification tasks.
 
-## ✨ Key Features
+## Key Features
 
-- 🔬 **Dual Decomposition Strategy**: Combines activation (CoLA) and gradient (GaLore) decomposition
-- 🎨 **Flexible Model Sizes**: Support for tiny, small, base, large, and huge ViT configurations
-- 💾 **Memory Profiling**: Built-in memory measurement and breakdown analysis
-- 📊 **WandB Integration**: Comprehensive experiment tracking and visualization
-- ⚙️ **Multiple Optimizers**: Support for AdamW, GaLore-AdamW, and 8-bit variants
-- 🔄 **Gradient Checkpointing**: Optional activation checkpointing for additional memory savings
-- 🎯 **Hydra Configuration**: Flexible configuration management with Hydra
+- **Dual Decomposition Strategy**: Combines activation (CoLA) and gradient (GaLore) decomposition
+- **Flexible Model Sizes**: Support for tiny, small, base, large, and huge ViT configurations
+- **Memory Profiling**: Built-in memory measurement and breakdown analysis
+- **WandB Integration**: Comprehensive experiment tracking and visualization
+- **Multiple Optimizers**: Support for AdamW, GaLore-AdamW, and 8-bit variants
+- **Gradient Checkpointing**: Optional activation checkpointing for additional memory savings
+- **Hydra Configuration**: Flexible configuration management with Hydra
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
@@ -41,7 +41,7 @@ By combining both techniques, we achieve significant memory savings while mainta
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd GaLore_Cola_for_Vit_v3
+cd GaLore_Cola_for_Vit
 ```
 
 2. Create and activate the conda environment:
@@ -57,7 +57,7 @@ The environment includes:
 - TensorLy (for tensor decomposition)
 - All other required dependencies
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Basic Usage
 
@@ -104,40 +104,41 @@ python main/main.py --config-name cola_galore_layer size=tiny full_train=false
 # Custom WandB project
 python main/main.py --config-name cola_galore_layer size=base wandb_project_name=my_experiment
 
-# Enable mixed precision training
-python main/main.py --config-name cola_galore_layer size=base use_amp=true
+# Profile memory usage
+python main/main.py --config-name cola_galore_layer size=base use_profiler=true
 ```
 
-## 📊 Results
+## Results
 
-### Performance Comparison
+<div align="center">
 
-Our experiments compare four configurations across different model sizes and training settings:
+<img width="800" alt="ViT-Tiny Accuracy and Loss" src="https://github.com/user-attachments/assets/0c144cf4-91c3-43dd-81d6-7eb036b71b14" />
+<p><strong>Figure 1 - ViT Tiny (6M):</strong> Training and validation accuracy and loss for ViT-Tiny trained with the combined CoLA + GaLore method, compared to the baseline.</p>
+<br>
 
-1. **ViT + AdamW** (baseline)
-2. **ViT + GaLore** (gradient decomposition only)
-3. **CoLA + AdamW** (activation decomposition only)
-4. **CoLA + GaLore** (both decompositions)
+<img width="800" alt="Memory Breakdown CoLA + GaLore" src="https://github.com/user-attachments/assets/704693ee-d470-4367-a165-c2bb59782b18" />
+<p><strong>Figure 2 - ViT Tiny (6M):</strong> Memory breakdown for the combined CoLA + GaLore configuration, showing parameter count, peak GPU memory usage, and contributions from optimizer state, gradients, parameters, and activations.</p>
+<br>
 
-### Wandb Report
+<img width="850" alt="ViT-Huge Memory Breakdown" src="https://github.com/user-attachments/assets/faec7917-10e9-4120-befa-1ecf59738dbf" />
+<p><strong>Figure 3 - ViT Huge (600M):</strong> Memory breakdown for ViT-Huge across different configurations. The CoLA + GaLore method reduces total peak memory to 6.45 GB, a ~3x reduction compared to the >20 GB baseline.</p>
+<br>
 
-[Report](https://api.wandb.ai/links/din-alon-technion-israel-institute-of-technology/tar40u65)
+<img width="900" alt="ViT-Huge Throughput" src="https://github.com/user-attachments/assets/01e0b78e-752c-4c20-80b8-6f06313c2ca9" />
+<p><strong>Figure 4 - ViT Huge (600M):</strong> Training throughput (time per iteration, forward pass, and backward pass) for ViT-Huge. While CoLA + GaLore introduces computational overhead, it enables the training of the model in significantly lower memory footprints.</p>
 
+</div>
 
-<img width="1300" height="600" alt="image" src="https://github.com/user-attachments/assets/407c4a81-11b3-4563-bef6-acbc5d0380c2" />
-<img width="1300" height="670" alt="image" src="https://github.com/user-attachments/assets/2844dc60-267c-4a5e-b896-8aaf4db20379" />
-<img width="1038" height="734" alt="image" src="https://github.com/user-attachments/assets/0abdc266-3058-4ca3-b620-fb894d80ed77" />
-<img width="1300" height="432" alt="image" src="https://github.com/user-attachments/assets/eb4de30a-9c43-414b-8579-c7e460a6be81" />
-
-
+### Note: 
+While we validated accuracy and loss for the smaller ViT-Tiny model (Figure 1 & 2), our experiments with ViT-Huge are limited to memory and throughput profiling (Figures 3 & 4). We did not perform full accuracy benchmarks for ViT-Huge due to the excessive training time required given our available computational resources.
 
 ### Key Findings
 
-- **Memory Reduction**: ~80% memory savings with combined CoLA+GaLore
-- **Performance**: Minimal accuracy degradation (<2%) compared to baseline but compensated with longer training.
-- **Scalability**: Enables training of "huge" ViT models on single 24GB GPU
+- **Memory Reduction (ViT Tiny)**: ~80% memory savings with combined CoLA+GaLore
+- **Performance (ViT Tiny)**: Minimal accuracy degradation (<2%) compared to baseline but compensated with longer training.
+- **Memory Reduction (ViT Huge)**: Reduced peak memory from >20 GB to 6.45 GB (approx. 3x reduction).
 
-## 🏗️ File Structure
+## File Structure
 
 ```
 GaLore_Cola_for_Vit_v3/
@@ -166,11 +167,9 @@ GaLore_Cola_for_Vit_v3/
 │   ├── vit_galore_layer.yaml
 │   ├── cola_adamw.yaml
 │   └── cola_galore_layer.yaml
-└── experiments/
-    └── mem_diff.sh          # Memory comparison scripts
 ```
 
-## 🔬 Methodology
+## Methodology
 
 ### CoLA: Low-Rank Activation Decomposition
 
@@ -197,11 +196,9 @@ This reduces activation memory during forward passes, especially in the intermed
 
 GaLore projects gradients into low-rank subspaces using SVD decomposition:
 
-1. **Projection**: `g_low = P^T · g_full` (project full-rank gradient to low-rank)
-2. **Optimizer Step**: Apply AdamW on low-rank gradient
-3. **Back-Projection**: `g_full ≈ P · g_low` (reconstruct full-rank update)
+![Galore Algorithm](https://github.com/user-attachments/assets/f69beee8-37db-47b8-8cba-fbc68a74e8f3)
 
-The projection matrix `P` is periodically updated via SVD of the weight matrix, amortizing the SVD cost over multiple steps.
+Taken from Galore Paper
 
 **Key Parameters:**
 - `galore_rank`: Rank of gradient projection (default: 128)
@@ -215,7 +212,7 @@ When both methods are used together:
 - **Backward pass**: GaLore reduces gradient and optimizer state memory
 - **Result**: Significant overall memory reduction enabling larger models on single GPUs
 
-## 📚 Citation
+## Citation
 
 ```bibtex
 @article{cola2025,
@@ -233,7 +230,7 @@ When both methods are used together:
 }
 ```
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **CoLA Implementation**: Based on [alvin-zyl/CoLA](https://github.com/alvin-zyl/CoLA)
 - **GaLore Implementation**: Based on [jiaweizzhao/GaLore](https://github.com/jiaweizzhao/GaLore)
@@ -241,7 +238,7 @@ When both methods are used together:
 - **Vision Transformer**: Built on Hugging Face Transformers library
 - **Dataset**: CIFAR-10 from PyTorch datasets
 
-## 📝 License
+## License
 
 This project is open source and available under the MIT License.
 
