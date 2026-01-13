@@ -142,6 +142,16 @@ While we validated accuracy and loss for the smaller ViT-Tiny model (Figure 1 & 
 
 ```
 GaLore_Cola_for_Vit_v3/
+├── conf/
+│   ├── base.yaml            # Base configuration
+│   ├── vit_adamw.yaml       # Standard ViT config
+│   ├── vit_galore_layer.yaml
+│   ├── cola_adamw.yaml
+│   └── cola_galore_layer.yaml
+├── experiments/
+│   ├── cola_galore_long_run.sh
+│   ├── cola_galore_regularization_search.sh
+│   ├── mem_diff.sh
 ├── main/
 │   └── main.py              # Entry point with Hydra configuration
 ├── model/
@@ -161,12 +171,6 @@ GaLore_Cola_for_Vit_v3/
 │   ├── dataloader.py        # CIFAR-10 data loading
 │   ├── memory_record.py     # Memory profiling tools
 │   └── optuna_utils.py      # Hyperparameter optimization
-├── conf/
-│   ├── base.yaml            # Base configuration
-│   ├── vit_adamw.yaml       # Standard ViT config
-│   ├── vit_galore_layer.yaml
-│   ├── cola_adamw.yaml
-│   └── cola_galore_layer.yaml
 ```
 
 ## Methodology
