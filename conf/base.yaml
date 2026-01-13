@@ -21,7 +21,7 @@ seed: 42
 
 # Cola settings
 cola_rank_ratio: 0.25
-cola_use_intermediate_rank_scale: true
+cola_use_intermediate_rank_scale: false
 cola_act: "gelu"
 
 # Galore settings
@@ -42,10 +42,10 @@ scheduler_warmup_pct: 0.02
 scheduler_gamma: 1
 
 # Data configuration
-dataset_name: "cifar10"
-num_classes: 10
-image_size: 32
-patch_size: 4
+dataset_name: "imagenet"
+num_classes: 200
+image_size: 64
+patch_size: 8
 num_channels: 3
 
 # Regularization

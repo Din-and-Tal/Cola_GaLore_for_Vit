@@ -1,12 +1,13 @@
 from types import SimpleNamespace
 
 import torch
-import wandb
 
+import wandb
 from optimizer.galore_setup import get_optimizer_scheduler
 from train.trainer_loop import train_loop
 from train.trainer_utils import set_seed
 from util.dataloader import get_data_loaders
+from util.dataloader_imagenet import get_imagenet_data_loaders
 from util.memory_record import profile_memory
 from util.model import build_model
 
@@ -30,7 +31,16 @@ class Trainer:
         set_seed(cfg.seed)
 
         # 2. Data
-        self.loaders.train, self.loaders.val, self.loaders.test = get_data_loaders(cfg)
+        self.loaders.train, self.loaders.val, self.loaders.test = None, None, None
+        if cfg.dataset_name:
+            self.loaders.train, self.loaders.val, self.loaders.test = get_data_loaders(
+                cfg
+            )
+        else:
+            self.loaders.train, self.loaders.val, self.loaders.test = (
+                get_imagenet_data_loaders(cfg)
+            )
+
         cfg.total_steps = len(self.loaders.train) * cfg.num_epochs
 
         # 3. Model & Measure Memory
@@ -51,7 +61,11 @@ class Trainer:
 
         # 5. Wandb Initialization
         if cfg.use_wandb:
-            project_name = "test_runs" if not cfg.full_train and cfg.wandb_project_name=="no_project_name" else cfg.wandb_project_name
+            project_name = (
+                "test_runs"
+                if not cfg.full_train and cfg.wandb_project_name == "no_project_name"
+                else cfg.wandb_project_name
+            )
             # Convert config to dict to save all parameters individually
             config_dict = {}
             for key in dir(cfg):
