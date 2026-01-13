@@ -123,10 +123,13 @@ Our experiments compare four configurations across different model sizes and tra
 
 [Report](https://api.wandb.ai/links/din-alon-technion-israel-institute-of-technology/tar40u65)
 
-<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/42e0c1d7-232f-4954-843f-2a1446a48a94" />
-<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/2b21c624-e5f2-4a22-b639-cd8bedc94074" />
-<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/2400dcd7-ebd4-4d99-9504-8233d9b1b026" />
-<img width="1770" height="644" alt="image" src="https://github.com/user-attachments/assets/3d660ed0-28d8-41cd-9c2e-c37f9822df5a" />
+
+<img width="1300" height="600" alt="image" src="https://github.com/user-attachments/assets/407c4a81-11b3-4563-bef6-acbc5d0380c2" />
+<img width="1300" height="670" alt="image" src="https://github.com/user-attachments/assets/2844dc60-267c-4a5e-b896-8aaf4db20379" />
+<img width="1038" height="734" alt="image" src="https://github.com/user-attachments/assets/0abdc266-3058-4ca3-b620-fb894d80ed77" />
+<img width="1300" height="432" alt="image" src="https://github.com/user-attachments/assets/eb4de30a-9c43-414b-8579-c7e460a6be81" />
+
+
 
 ### Key Findings
 
